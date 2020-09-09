@@ -32,9 +32,9 @@ struct Globals {
     static let maxSilenceLength: Float = 0.3
     
     // Engines Initialization data paths
-    static let verificationInitDataPath = Bundle.main.resourcePath! + "/verify_init_data/"
-    static let speechSummaryInitDataPath = Bundle.main.resourcePath! + "/speech_summary_init_data/"
-    static let antispoofInitDataPath = Bundle.main.resourcePath! + "/spoof_init_data/"
+    static let verificationInitDataPath = Bundle.main.resourcePath! + "/verify/verify_init_data_16k/"
+    static let speechSummaryInitDataPath = Bundle.main.resourcePath! + "/media/"
+    static let antispoofInitDataPath = Bundle.main.resourcePath! + "/antispoof2/"
     
     // Instruction Strings
     static let textDependentEnrollmentInstruction = "\nTo enroll in Text Dependent mode please provide 3 voice recordings with 'Golden State Warriors' phrase.\n\nPress Record to start recording."
