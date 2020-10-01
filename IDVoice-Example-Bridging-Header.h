@@ -7,7 +7,6 @@
 //
 
 #import <VoiceSdk/verify.h>
-#import <VoiceSdk/verify_defines.h>
 #import <VoiceSdk/antispoof.h>
 #import <VoiceSdk/antispoof_result.h>
 #import <VoiceSdk/speech_summary.h>

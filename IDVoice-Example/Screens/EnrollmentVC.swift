@@ -18,14 +18,16 @@ class EnrollmentViewController: UIViewController {
     @IBOutlet weak var instructionsLabel: UILabel!
     @IBOutlet weak var recordButton: UIButton!
     
-    var checks: [UIImageView] = []
-    var templates: [VoiceTemplate] = []
-    var template: VoiceTemplate?
-    let img = UIImage(named: "ok_on")
-    var recordNumber: Int = 0
+    private var checks: [UIImageView] = []
+    private var templates: [VoiceTemplate] = []
+    private var template: VoiceTemplate?
+    private let img = UIImage(named: "ok_on")
+    private var recordNumber: Int = 0
+    private var minSpeechLengthMs: Float = 500 // Default minimum amount of speech for enrollment in milliseconds. This parameter value is set depending on used mode (Text Dependent, Text Independent).
+    
     var verificationMode: VerificationMode?
-    var verificationEngine: VerifyEngine?
-    var minSpeechLength: Float = 0.5 // Default minimum amount of speech for enrollment in seconds. This parameter value is set depending on used mode (Text Dependent, Text Independent).
+    private var voiceTemplateFactory: VoiceTemplateFactory?
+    private var voiceTemplateMatcher: VoiceTemplateMatcher?
     
     
     override func viewDidLoad() {
@@ -39,11 +41,13 @@ class EnrollmentViewController: UIViewController {
     fileprivate func setVoiceEngineParameters() {
         switch verificationMode {
         case .TextDependent:
-            verificationEngine = Globals.textDependentVerificationEngine
-            minSpeechLength = Globals.minSpeechLengthTextDependentEnroll
+            voiceTemplateFactory = Globals.textDependentVoiceTemplateFactory
+            voiceTemplateMatcher = Globals.textDependentVoiceTemplateMatcher
+            minSpeechLengthMs = Globals.minSpeechLengthMsTextDependentEnroll
         case .TextIndependent:
-            verificationEngine = Globals.textIndependentVerificationEngine
-            minSpeechLength = Globals.minSpeechLengthTextIndependentEnroll
+            voiceTemplateFactory = Globals.textIndependentVoiceTemplateFactory
+            voiceTemplateMatcher = Globals.textIndependentVoiceTemplateMatcher
+            minSpeechLengthMs = Globals.minSpeechLengthMsTextIndependentEnroll
         default:
             break
         }
@@ -56,6 +60,10 @@ class EnrollmentViewController: UIViewController {
         recordButton.layer.cornerRadius = 10
         recordButton.backgroundColor = .redColor
         recordButton.clipsToBounds = true
+        
+        if #available(iOS 13.0, *) {
+            recordButton?.layer.cornerCurve = CALayerCornerCurve.continuous
+        }
         
         if verificationMode == .TextIndependent {
             checkStackView.isHidden = true
@@ -81,7 +89,7 @@ class EnrollmentViewController: UIViewController {
         if segue.identifier == "showRecordingView" {
             let view = segue.destination as! RecordingViewController
             view.verificationMode = verificationMode
-            view.minSpeechLength = self.minSpeechLength
+            view.minSpeechLengthMs = self.minSpeechLengthMs
             view.onStopRecordingCallback = self.stopRecording
             view.mode = .Enrollment
         }
@@ -109,7 +117,7 @@ class EnrollmentViewController: UIViewController {
                 DispatchQueue.main.async() {
                     self.checks[self.recordNumber].image = self.img
                     // Create voice template after each attempt and appending it to an array of voice tamplates
-                    self.templates.append(self.verificationEngine!.createVoiceTemplate(data, sampleRate: Float(sampleRate)))
+                    self.templates.append(self.voiceTemplateFactory!.createVoiceTemplate(data, sampleRate: sampleRate))
                     // When the desired amount of templates is achieved (in our case — 3) voice data for enrolling user is ready to be saved
                     if self.recordNumber > 1 {
                         self.saveUser()
@@ -127,7 +135,7 @@ class EnrollmentViewController: UIViewController {
                 // Create voice template from recording
                 do {
                     try ExceptionTranslator.catchException {
-                        self.template = self.verificationEngine!.createVoiceTemplate(data, sampleRate: Float(sampleRate))
+                        self.template = self.voiceTemplateFactory!.createVoiceTemplate(data, sampleRate: sampleRate)
                     }
                 } catch {
                     print(error)
@@ -180,13 +188,17 @@ class EnrollmentViewController: UIViewController {
         // For Text Dependent Mode
         case .TextDependent:
             // Merge Templates
-            let mergedTemplate = verificationEngine!.mergeVoiceTemplates(templates)
+            let mergedTemplate = voiceTemplateFactory?.mergeVoiceTemplates(templates)
             // Save user template
-            UserDefaults.standard.set(mergedTemplate.serialize(), forKey: Globals.textDependentVoiceTemplateKey)
+            if let mergedTemplate = mergedTemplate {
+                UserDefaults.standard.set(mergedTemplate.serialize(), forKey: Globals.textDependentVoiceTemplateKey)
+            }
         // For Text Independent Mode
         case .TextIndependent:
             // Save user template
-            UserDefaults.standard.set(template!.serialize(), forKey: Globals.textIndependentVoiceTemplateKey)
+            if let template = template {
+                UserDefaults.standard.set(template.serialize(), forKey: Globals.textIndependentVoiceTemplateKey)
+            }
         default:
             break
         }

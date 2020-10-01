@@ -23,30 +23,32 @@ class AudioRecorder {
         case Recording
     }
     
-    let audioEngine: AVAudioEngine = AVAudioEngine()
-    var audioRecorder: AVAudioRecorder?
+    private let audioEngine: AVAudioEngine = AVAudioEngine()
+    private var audioRecorder: AVAudioRecorder?
     
     private var speechSummaryStream: SpeechSummaryStream!
-    private var continuousVerificationStream: VerifyStream!
+    private var continuousVerificationStream: VoiceVerifyStream!
+    private var voiceTemplateMatcher: VoiceTemplateMatcher!
+    private var voiceTemplateFactory: VoiceTemplateFactory!
     
-    var audioFilename = ""
+    private var verificationMode: VerificationMode?
+    
+    private var audioFilename = ""
     weak var delegate: AudioRecorderDelegate?
-    var status: Status = .Idle
-    var data: Data?
-    var sampleRate: Double = 44100.0 // default audio sample rate
-    var verificationMode: VerificationMode?
-    var verificationEngine: VerifyEngine?
-    var minSpeechLength: Float = 0
+    private var status: Status = .Idle
+    private var data: Data?
+    private var sampleRate: Double = 44100.0 // default audio sample rate
+    private var minSpeechLengthMs: Float = 0
     
     init(audioFilename: String, verificationMode: VerificationMode, minSpeechLength: Float) {
         self.audioFilename = audioFilename
         self.verificationMode = verificationMode
-        self.minSpeechLength = minSpeechLength
+        self.minSpeechLengthMs = minSpeechLength
         setVoiceEngineParameters()
     }
     
     
-    func setVoiceEngineParameters() {
+    fileprivate func setVoiceEngineParameters() {
         // Determine device hardware sample rate
         sampleRate = audioEngine.inputNode.inputFormat(forBus: 0).sampleRate
         
@@ -54,21 +56,16 @@ class AudioRecorder {
         // Create Speech Summary stream to evaluation amount of speech
         speechSummaryStream = Globals.speechSummaryEngine!.createStream(Int32(sampleRate))
         
-        // Set voice engines for corresponding modes
-        switch verificationMode {
-        case .TextDependent:
-            verificationEngine = Globals.textDependentVerificationEngine
-        case .TextIndependent:
-            verificationEngine = Globals.textIndependentVerificationEngine
-        case .Continuous:
+        
+        // Setting parameters for Continuous Verification mode
+        if verificationMode == .Continuous {
             // Get Text Independent Enrollment template
             let voiceTemplate = VoiceTemplate(bytes: UserDefaults.standard.data(forKey: Globals.textIndependentVoiceTemplateKey)!)
-            // Set corresponding engine
-            verificationEngine = Globals.textIndependentVerificationEngine
+            // Set corresponding Template Factory and Matcher
+            voiceTemplateFactory = Globals.textIndependentVoiceTemplateFactory
+            voiceTemplateMatcher = Globals.textIndependentVoiceTemplateMatcher
             // Create Verification Stream
-            continuousVerificationStream = verificationEngine?.createVerifyStream(voiceTemplate, sampleRate: Int32(self.sampleRate), windowLengthSeconds: 3)
-        default:
-            break
+            continuousVerificationStream = VoiceVerifyStream(voiceTemplateFactory: voiceTemplateFactory, voiceTemplateMatcher: voiceTemplateMatcher, voiceTemplate: voiceTemplate, sampleRate: Int(self.sampleRate), windowLengthSeconds: 3)
         }
     }
     
@@ -96,11 +93,11 @@ class AudioRecorder {
             self.speechSummaryStream!.addSamples(bufferData)
             
             // 2) Retrieve speech length and invoke delegate method
-            let speechLength = self.speechSummaryStream!.getSpeechLength()
+            let speechLengthMs = self.speechSummaryStream!.getTotalSpeechSummary().speechInfo.speechLengthMs
             
             DispatchQueue.main.async {
                 if self.verificationMode == .TextDependent || self.verificationMode == .TextIndependent {
-                    self.delegate?.onSpeechLengthAvailable(speechLength: Double(speechLength))
+                    self.delegate?.onSpeechLengthAvailable(speechLength: Double(speechLengthMs))
                 }
             }
             
@@ -109,8 +106,8 @@ class AudioRecorder {
             
             // 4) Stop recording if minimum speech length is achieved (In "Continuous Verification" mode speech length is ignored).
             if self.verificationMode != .Continuous {
-                if speechLength > self.minSpeechLength &&
-                    backgroundLength > Globals.maxSilenceLength {
+                if speechLengthMs > self.minSpeechLengthMs &&
+                    backgroundLength > Globals.maxSilenceLengthMs {
                     self.finishRecording()
                 }
             }
@@ -159,7 +156,7 @@ class AudioRecorder {
     }
     
     
-    func finishRecording() {
+    fileprivate func finishRecording() {
         if status == .Recording {
             
             DispatchQueue.main.async {

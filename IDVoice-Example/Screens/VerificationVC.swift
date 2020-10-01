@@ -14,13 +14,16 @@ class VerificationViewController: UIViewController {
     @IBOutlet weak var instructionsLabel: UILabel!
     @IBOutlet weak var recordButton: UIButton!
     
-    var verificationEngine: VerifyEngine?
-    var livenessEngine: AntispoofEngine?
+    private var voiceTemplateFactory: VoiceTemplateFactory?
+    private var voiceTemplateMatcher: VoiceTemplateMatcher?
+    
+    private var livenessEngine: AntispoofEngine?
     var verificationMode: VerificationMode?
-    var verificationProbability: Float = 0
-    var livenessScore: Float = 0
-    var isSpoof: Bool = true
-    var minSpeechLength: Float = 0.5 // Default minimum amout of speech for verification in seconds. This parameter value is set depending on used mode (Text Dependent, Text Independent).
+    
+    private var verificationProbability: Float = 0
+    private var livenessScore: Float = 0
+    private var isSpoof: Bool = true
+    private var minSpeechLength: Float = 0.5 // Default minimum amout of speech for verification in milliseconds. This parameter value is set depending on used mode (Text Dependent, Text Independent).
     
     
     override func viewDidLoad() {
@@ -34,11 +37,13 @@ class VerificationViewController: UIViewController {
     fileprivate func setVoiceEngineParameters() {
         switch verificationMode {
         case .TextDependent:
-            verificationEngine = Globals.textDependentVerificationEngine
-            minSpeechLength = Globals.minSpeechLengthForTextDependentVerify
+            voiceTemplateFactory = Globals.textDependentVoiceTemplateFactory
+            voiceTemplateMatcher = Globals.textDependentVoiceTemplateMatcher
+            minSpeechLength = Globals.minSpeechLengthMsForTextDependentVerify
         case .TextIndependent:
-            verificationEngine = Globals.textIndependentVerificationEngine
-            minSpeechLength = Globals.minSpeechLengthForTextIndependentVerify
+            voiceTemplateFactory = Globals.textIndependentVoiceTemplateFactory
+            voiceTemplateMatcher = Globals.textIndependentVoiceTemplateMatcher
+            minSpeechLength = Globals.minSpeechLengthMsForTextIndependentVerify
         default:
             break
         }
@@ -72,6 +77,10 @@ class VerificationViewController: UIViewController {
         recordButton.layer.cornerRadius = 10
         recordButton.clipsToBounds = true
         recordButton.backgroundColor = .redColor
+        
+        if #available(iOS 13.0, *) {
+            recordButton?.layer.cornerCurve = CALayerCornerCurve.continuous
+        }
     }
     
     
@@ -80,7 +89,7 @@ class VerificationViewController: UIViewController {
             let view = segue.destination as! RecordingViewController
             view.verificationMode = verificationMode
             view.mode = .Verification
-            view.minSpeechLength = minSpeechLength
+            view.minSpeechLengthMs = minSpeechLength
             view.onStopRecordingCallback = self.stopRecording
         } else if segue.identifier == "showResultsView" {
             let view = segue.destination as! ResultViewController
@@ -102,13 +111,17 @@ class VerificationViewController: UIViewController {
         do {
             try ExceptionTranslator.catchException {
                 // 1) Load user enrollment template
-                let enrollTemplate = VoiceTemplate(bytes: UserDefaults.standard.data(forKey: templateKey)!)
+                guard let templateData = UserDefaults.standard.data(forKey: templateKey) else { return }
+                let enrollTemplate = VoiceTemplate(bytes: templateData)
                 
                 // 2) Create verification template from recording
-                let verifyTemplate = self.verificationEngine!.createVoiceTemplate(data, sampleRate: Float(sampleRate))
+                let verifyTemplate = self.voiceTemplateFactory?.createVoiceTemplate(data, sampleRate: sampleRate)
                 
                 // 3) Match templates
-                self.verificationProbability = self.verificationEngine!.verify(enrollTemplate, template2: verifyTemplate).probability
+                if let verifyTemplate = verifyTemplate {
+                    self.verificationProbability = self.voiceTemplateMatcher?.matchVoiceTemplates(enrollTemplate, template2: verifyTemplate).probability ?? 0
+                }
+                
             }
         } catch {
             print(error)
@@ -123,7 +136,7 @@ class VerificationViewController: UIViewController {
             // 1) Perform anti-spoofing check
             do {
                 try ExceptionTranslator.catchException({
-                    self.livenessScore = self.livenessEngine!.isSpoof(data, sampleRate: Int32(sampleRate)).score
+                    self.livenessScore = self.livenessEngine?.isSpoof(data, sampleRate: Int32(sampleRate)).score ?? 0
                 })
             } catch {
                 print(error)
@@ -159,5 +172,9 @@ class VerificationViewController: UIViewController {
                 self.performSegue(withIdentifier: "showRecordingView", sender: self)
             }
         }
+    }
+    
+    deinit {
+        VoiceEngineManager.shared.deinitAntiSpoofingEngine()
     }
 }

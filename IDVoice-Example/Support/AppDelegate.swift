@@ -21,7 +21,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     
-    func configureGlobalUI() {
+    fileprivate func configureGlobalUI() {
         // Setting UI elements appearence globally
         UISlider.appearance().tintColor = .accentColor
         UISwitch.appearance().onTintColor = .accentColor
@@ -29,7 +29,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     
-    func registerUserDefaultValues() {
+    fileprivate func registerUserDefaultValues() {
         // Giving default values to your UserDefault keys
         // Default Voice verification threshold
         let defaultVerificationThreshold: Float = 0.5
@@ -48,10 +48,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     
-    func initializeVoiceEngines() {
+    fileprivate func initializeVoiceEngines() {
         // Initializing Voice Engines
-        Globals.textDependentVerificationEngine = VoiceEngineManager.shared.getVerifyEngine(for: .TextDependent)
-        Globals.textIndependentVerificationEngine = VoiceEngineManager.shared.getVerifyEngine(for: .TextIndependent)
+        Globals.textDependentVoiceTemplateFactory = VoiceEngineManager.shared.getVoiceTemplateFactory(for: .TextDependent)
+        Globals.textDependentVoiceTemplateMatcher = VoiceEngineManager.shared.getVoiceTemplateMatcher(for: .TextDependent)
+        
+        Globals.textIndependentVoiceTemplateFactory = VoiceEngineManager.shared.getVoiceTemplateFactory(for: .TextIndependent)
+        Globals.textIndependentVoiceTemplateMatcher = VoiceEngineManager.shared.getVoiceTemplateMatcher(for: .TextIndependent)
+        
         Globals.speechSummaryEngine = VoiceEngineManager.shared.getSpeechSummaryEngine()
         Globals.snrComputer = VoiceEngineManager.shared.getSNRComputer()
         // Liveness Engine is memory intensive so it's initialising only if Liveness Check is enabled when the result screen is about to appear and deinitialised right after.

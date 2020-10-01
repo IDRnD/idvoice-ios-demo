@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		811BC11D24D31D1A007AD643 /* ResultVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 811BC11C24D31D1A007AD643 /* ResultVC.swift */; };
 		8128EE6824D18A4B00D8123C /* EnginesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8128EE6724D18A4B00D8123C /* EnginesManager.swift */; };
+		8134888924D029D70002D72D /* VoiceSdk.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8134888624D029120002D72D /* VoiceSdk.framework */; };
+		8134888A24D029D70002D72D /* VoiceSdk.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 8134888624D029120002D72D /* VoiceSdk.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		8134889524D02CFD0002D72D /* Globals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8134889424D02CFD0002D72D /* Globals.swift */; };
 		8134889724D02EA00002D72D /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8134889624D02EA00002D72D /* Extensions.swift */; };
 		8134889924D0345A0002D72D /* SettingsVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8134889824D0345A0002D72D /* SettingsVC.swift */; };
@@ -16,11 +18,9 @@
 		8134889D24D035E50002D72D /* VerificationVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8134889C24D035E50002D72D /* VerificationVC.swift */; };
 		813488A124D0601E0002D72D /* RecordingVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 813488A024D0601E0002D72D /* RecordingVC.swift */; };
 		813488A324D06FBF0002D72D /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 813488A224D06FBF0002D72D /* AudioRecorder.swift */; };
-		81D32A3D250907000073E410 /* antispoof2 in Resources */ = {isa = PBXBuildFile; fileRef = 81D32A39250906FF0073E410 /* antispoof2 */; };
-		81D32A3E250907000073E410 /* verify in Resources */ = {isa = PBXBuildFile; fileRef = 81D32A3A250906FF0073E410 /* verify */; };
-		81D32A40250907000073E410 /* media in Resources */ = {isa = PBXBuildFile; fileRef = 81D32A3C250907000073E410 /* media */; };
-		81D32A412509072F0073E410 /* VoiceSdk.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 81D32A3B250907000073E410 /* VoiceSdk.framework */; };
-		81D32A422509072F0073E410 /* VoiceSdk.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 81D32A3B250907000073E410 /* VoiceSdk.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		81D32A4625090B1C0073E410 /* verify in Resources */ = {isa = PBXBuildFile; fileRef = 81D32A4325090B1C0073E410 /* verify */; };
+		81D32A4725090B1C0073E410 /* media in Resources */ = {isa = PBXBuildFile; fileRef = 81D32A4425090B1C0073E410 /* media */; };
+		81D32A4825090B1C0073E410 /* antispoof2 in Resources */ = {isa = PBXBuildFile; fileRef = 81D32A4525090B1C0073E410 /* antispoof2 */; };
 		81DBC1DE24D0281500FEC180 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DBC1DD24D0281500FEC180 /* AppDelegate.swift */; };
 		81DBC1E224D0281500FEC180 /* MainVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DBC1E124D0281500FEC180 /* MainVC.swift */; };
 		81DBC1E524D0281500FEC180 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81DBC1E324D0281500FEC180 /* Main.storyboard */; };
@@ -35,7 +35,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				81D32A422509072F0073E410 /* VoiceSdk.framework in Embed Frameworks */,
+				8134888A24D029D70002D72D /* VoiceSdk.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -45,6 +45,7 @@
 /* Begin PBXFileReference section */
 		811BC11C24D31D1A007AD643 /* ResultVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultVC.swift; sourceTree = "<group>"; };
 		8128EE6724D18A4B00D8123C /* EnginesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnginesManager.swift; sourceTree = "<group>"; };
+		8134888624D029120002D72D /* VoiceSdk.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VoiceSdk.framework; path = VoiceSDK/VoiceSdk.framework; sourceTree = "<group>"; };
 		8134888824D029310002D72D /* IDVoice-Example-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "IDVoice-Example-Bridging-Header.h"; sourceTree = "<group>"; };
 		8134889424D02CFD0002D72D /* Globals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Globals.swift; sourceTree = "<group>"; };
 		8134889624D02EA00002D72D /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
@@ -53,10 +54,9 @@
 		8134889C24D035E50002D72D /* VerificationVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerificationVC.swift; sourceTree = "<group>"; };
 		813488A024D0601E0002D72D /* RecordingVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingVC.swift; sourceTree = "<group>"; };
 		813488A224D06FBF0002D72D /* AudioRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
-		81D32A39250906FF0073E410 /* antispoof2 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = antispoof2; path = VoiceSDK/antispoof2; sourceTree = "<group>"; };
-		81D32A3A250906FF0073E410 /* verify */ = {isa = PBXFileReference; lastKnownFileType = folder; name = verify; path = VoiceSDK/verify; sourceTree = "<group>"; };
-		81D32A3B250907000073E410 /* VoiceSdk.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VoiceSdk.framework; path = VoiceSDK/VoiceSdk.framework; sourceTree = "<group>"; };
-		81D32A3C250907000073E410 /* media */ = {isa = PBXFileReference; lastKnownFileType = folder; name = media; path = VoiceSDK/media; sourceTree = "<group>"; };
+		81D32A4325090B1C0073E410 /* verify */ = {isa = PBXFileReference; lastKnownFileType = folder; name = verify; path = VoiceSDK/verify; sourceTree = "<group>"; };
+		81D32A4425090B1C0073E410 /* media */ = {isa = PBXFileReference; lastKnownFileType = folder; name = media; path = VoiceSDK/media; sourceTree = "<group>"; };
+		81D32A4525090B1C0073E410 /* antispoof2 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = antispoof2; path = VoiceSDK/antispoof2; sourceTree = "<group>"; };
 		81DBC1DA24D0281500FEC180 /* IDVoice-Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "IDVoice-Example.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		81DBC1DD24D0281500FEC180 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		81DBC1E124D0281500FEC180 /* MainVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainVC.swift; sourceTree = "<group>"; };
@@ -71,7 +71,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				81D32A412509072F0073E410 /* VoiceSdk.framework in Frameworks */,
+				8134888924D029D70002D72D /* VoiceSdk.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,11 +112,11 @@
 		81DBC1D124D0281500FEC180 = {
 			isa = PBXGroup;
 			children = (
-				81D32A39250906FF0073E410 /* antispoof2 */,
-				81D32A3C250907000073E410 /* media */,
-				81D32A3A250906FF0073E410 /* verify */,
-				81D32A3B250907000073E410 /* VoiceSdk.framework */,
+				81D32A4525090B1C0073E410 /* antispoof2 */,
+				81D32A4425090B1C0073E410 /* media */,
+				81D32A4325090B1C0073E410 /* verify */,
 				8134888824D029310002D72D /* IDVoice-Example-Bridging-Header.h */,
+				8134888624D029120002D72D /* VoiceSdk.framework */,
 				81DBC1DC24D0281500FEC180 /* IDVoice-Example */,
 				81DBC1DB24D0281500FEC180 /* Products */,
 			);
@@ -204,12 +204,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				81D32A3E250907000073E410 /* verify in Resources */,
 				81DBC1EA24D0281700FEC180 /* LaunchScreen.storyboard in Resources */,
 				81DBC1E724D0281700FEC180 /* Assets.xcassets in Resources */,
-				81D32A40250907000073E410 /* media in Resources */,
+				81D32A4725090B1C0073E410 /* media in Resources */,
+				81D32A4825090B1C0073E410 /* antispoof2 in Resources */,
 				81DBC1E524D0281500FEC180 /* Main.storyboard in Resources */,
-				81D32A3D250907000073E410 /* antispoof2 in Resources */,
+				81D32A4625090B1C0073E410 /* verify in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

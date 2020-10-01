@@ -16,7 +16,7 @@ class MainViewController: UIViewController {
     @IBOutlet weak var segmentedControl: UISegmentedControl!
     @IBOutlet weak var settingsButton: UIButton!
     
-    var verificationMode: VerificationMode = .TextDependent
+    private var verificationMode: VerificationMode = .TextDependent
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -63,6 +63,9 @@ class MainViewController: UIViewController {
             button?.backgroundColor = .accentColor
             button?.clipsToBounds = true
             button?.layer.cornerRadius = 10
+            if #available(iOS 13.0, *) {
+                button?.layer.cornerCurve = CALayerCornerCurve.continuous
+            }
         }
     }
     

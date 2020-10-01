@@ -42,6 +42,10 @@ class SettingsViewController: UIViewController {
         if !UserDefaults.standard.bool(forKey: Globals.isLivenessCheckEnabled) {
             livenessThresholdStack.isHidden = true
         }
+        
+        if #available(iOS 13.0, *) {
+            resetEnrollmentsButton?.layer.cornerCurve = CALayerCornerCurve.continuous
+        }
     }
     
     

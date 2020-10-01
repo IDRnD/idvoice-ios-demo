@@ -30,6 +30,10 @@ class ResultViewController: UIViewController {
         view.setBackgroundColor()
         closeButton.layer.cornerRadius = 10
         closeButton.clipsToBounds = true
+        
+        if #available(iOS 13.0, *) {
+            closeButton?.layer.cornerCurve = CALayerCornerCurve.continuous
+        }
     }
     
     

@@ -26,12 +26,11 @@ class RecordingViewController: UIViewController {
     @IBOutlet weak var cancelButton: UIButton!
     @IBOutlet weak var spinner: UIActivityIndicatorView!
     
-    var audioFilename = ""
-    var audioRecorder: AudioRecorder?
-    var voiceEngine = VoiceEngineManager.shared.getVerifyEngine(for: .TextDependent)
+    private var audioFilename = ""
+    private var audioRecorder: AudioRecorder?
     var verificationMode: VerificationMode?
     var mode: Mode?
-    var minSpeechLength: Float = 0.5 // Default minimum amout of speech in recording in seconds. This parameters vary depending on used mode (Text Dependent, Text Independent) and scenario (enrollment, verification).
+    var minSpeechLengthMs: Float = 500 // Default minimum amout of speech in recording in milliseconds. This parameters vary depending on used mode (Text Dependent, Text Independent) and scenario (enrollment, verification).
     
     var onStopRecordingCallback: OnStopRecordingCallback?
     var onRecordingErrorCallback: OnRecordingErrorCallback?
@@ -42,8 +41,8 @@ class RecordingViewController: UIViewController {
         configureUI()
         setInstructionText()
         setupBackgroundStateObserver()
-        audioRecorder = AudioRecorder(audioFilename: self.audioFilename, verificationMode: verificationMode!, minSpeechLength: minSpeechLength)
-        audioRecorder!.delegate = self
+        audioRecorder = AudioRecorder(audioFilename: self.audioFilename, verificationMode: verificationMode!, minSpeechLength: minSpeechLengthMs)
+        audioRecorder?.delegate = self
     }
     
     
@@ -55,7 +54,7 @@ class RecordingViewController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        audioRecorder!.startRecording()
+        audioRecorder?.startRecording()
     }
     
     
@@ -70,6 +69,10 @@ class RecordingViewController: UIViewController {
         micImage.tintColor = .redColor
         metricAmountLabel.textColor = .accentColor
         cancelButton.tintColor = .systemGray
+        
+        if #available(iOS 13.0, *) {
+            cancelButton?.layer.cornerCurve = CALayerCornerCurve.continuous
+        }
     }
     
     
@@ -133,7 +136,7 @@ extension RecordingViewController: AudioRecorderDelegate {
     }
     
     func onSpeechLengthAvailable(speechLength: Double) {
-        self.metricAmountLabel.text = String(format: "%.1f s", speechLength)
+        self.metricAmountLabel.text = String(format: "%.1f s", speechLength / 1000)
     }
     
     func onContinuousVerificationScoreAvailable(verificationScore: Float) {

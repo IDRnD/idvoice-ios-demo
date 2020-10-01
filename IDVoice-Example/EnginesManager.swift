@@ -19,8 +19,12 @@ class VoiceEngineManager {
     static let shared = VoiceEngineManager()
     private init() {}
     
-    private var textDependentVoiceVerifyEngine: VerifyEngine!
-    private var textIndependentVoiceVerifyEngine: VerifyEngine!
+    private var textDependentVoiceTemplateFactory: VoiceTemplateFactory?
+    private var textIndependentVoiceTemplateFactory: VoiceTemplateFactory?
+    
+    private var textDependentVoiceTemplateMatcher: VoiceTemplateMatcher?
+    private var textIndependentVoiceTemplateMatcher: VoiceTemplateMatcher?
+    
     private var antispoofEngine: AntispoofEngine!
     private var speechSummaryEngine: SpeechSummaryEngine!
     private var snrComputer: SNRComputer!
@@ -34,22 +38,41 @@ class VoiceEngineManager {
     }
     
     
-    func getVerifyEngine(for voiceTemplateType: VerificationMode) -> VerifyEngine {
+    func getVoiceTemplateFactory(for voiceTemplateType: VerificationMode) -> VoiceTemplateFactory? {
         switch voiceTemplateType {
         case .TextDependent:
-            if textDependentVoiceVerifyEngine == nil {
-                textDependentVoiceVerifyEngine = VerifyEngine(path: Globals.verificationInitDataPath, verifyMethod: VOICESDK_MAP | VOICESDK_TI_X_2)
-                return textDependentVoiceVerifyEngine
+            if textDependentVoiceTemplateFactory == nil {
+                textDependentVoiceTemplateFactory = VoiceTemplateFactory(path: Globals.voiceTemplateFactoryAndMatcherTDInitDataPath)
+                return textDependentVoiceTemplateFactory
             }
         case .TextIndependent:
-            if textIndependentVoiceVerifyEngine == nil {
-                textIndependentVoiceVerifyEngine = VerifyEngine(path: Globals.verificationInitDataPath, verifyMethod: VOICESDK_TI_X_2)
-                return textIndependentVoiceVerifyEngine
+            if textIndependentVoiceTemplateFactory == nil {
+                textIndependentVoiceTemplateFactory = VoiceTemplateFactory(path: Globals.voiceTemplateFactoryAndMatcherTIInitDataPath)
+                return textIndependentVoiceTemplateFactory
             }
-        case .Continuous:
+        default:
             break
         }
-        return VerifyEngine()
+        return nil
+    }
+    
+    
+    func getVoiceTemplateMatcher(for voiceTemplateType: VerificationMode) -> VoiceTemplateMatcher? {
+        switch voiceTemplateType {
+        case .TextDependent:
+            if textDependentVoiceTemplateMatcher == nil {
+                textDependentVoiceTemplateMatcher = VoiceTemplateMatcher(path: Globals.voiceTemplateFactoryAndMatcherTDInitDataPath)
+                return textDependentVoiceTemplateMatcher
+            }
+        case .TextIndependent:
+            if textIndependentVoiceTemplateMatcher == nil {
+                textIndependentVoiceTemplateMatcher = VoiceTemplateMatcher(path: Globals.voiceTemplateFactoryAndMatcherTIInitDataPath)
+                return textIndependentVoiceTemplateMatcher
+            }
+        default:
+            break
+        }
+        return nil
     }
     
     
@@ -58,6 +81,13 @@ class VoiceEngineManager {
             antispoofEngine = AntispoofEngine(path: Globals.antispoofInitDataPath)
         }
         return antispoofEngine
+    }
+    
+    
+    func deinitAntiSpoofingEngine() {
+        if antispoofEngine != nil {
+            antispoofEngine = nil
+        }
     }
     
     

@@ -1,7 +1,7 @@
 iOS IDVoice sample application overview
 ===========================================
 
-**The application code is compatible with VoiceSDK 2.13 and 2.14.**
+**The application code is compatible with VoiceSDK 3.0. See branch '2.14' for VoiceSDK 2.13 and 2.14 support**
 
 This sample application is intended to demonstrate the VoiceSDK voice verification 
 and anti-spoofing capabilities:
@@ -22,9 +22,6 @@ Tips for voice verification process
 -----------------------------------
 
 - **Do enrolls in quiet conditions. Speak clearly and without changing the intonation of your usual voice.**
-- For small init data size, but large voice template size use MAP method (**text-dependent**)
-- For improved voice verification precision use MAP and TI_X_2 methods together (**text-dependent**)
-- For large init data size, but small voice template size use TI_X_2 method (**text-independent**)
 
 Please refer to [IDVoice quick start guide](https://docs.idrnd.net/voice/#idvoice-speaker-verification), [IDLive quick start guide](https://docs.idrnd.net/voice/#idlive-voice-anti-spoofing) and [signal validation guide](https://docs.idrnd.net/voice/#signal-validation-utilities) in order to get more detailed information and best practicies for the listed capabilities.
 
