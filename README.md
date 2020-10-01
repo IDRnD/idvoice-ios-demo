@@ -1,7 +1,7 @@
 iOS IDVoice sample application overview
 ===========================================
 
-**The application code is compatible with VoiceSDK 3.0. See branch '2.14' for VoiceSDK 2.13 and 2.14 support**
+**The application code is compatible with VoiceSDK 3.0. See tag 'v2.14' for VoiceSDK 2.13 and 2.14 support**
 
 This sample application is intended to demonstrate the VoiceSDK voice verification 
 and anti-spoofing capabilities:
