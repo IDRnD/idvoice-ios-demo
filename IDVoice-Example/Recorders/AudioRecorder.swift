@@ -73,8 +73,21 @@ class AudioRecorder {
     func startRecording() {
         data = Data()
         
+        /*
+         
+         !!! IMPORTANT !!!
+         Set the correct AVAudioSession category and mode. In this case these would be 'playAndRecord' category and 'measurement' mode.
+         
+         - 'playAndRecord' category is used for recording (input) and playback (output) of audio
+         - 'measurement' mode is used to minimize the amount of system-supplied signal processing to input signal
+         
+         The audio session’s category and mode together define how your app uses audio.
+         Typically, you set the category and mode before activating the session.
+         
+        */
+        
         do {
-            try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .measurement)
+            try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .measurement) // 'measurment' mode is especially important for the correct work of VoiceSDK Anti-Spoofing check.
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
             print(error.localizedDescription)
@@ -90,10 +103,9 @@ class AudioRecorder {
             let bufferData = NSData(bytes: channels[0], length:Int(buffer.frameCapacity * buffer.format.streamDescription.pointee.mBytesPerFrame)) as Data
             self.data?.append(bufferData)
             
-            self.speechSummaryStream!.addSamples(bufferData)
-            
+            self.speechSummaryStream.addSamples(bufferData)
             // 2) Retrieve speech length and invoke delegate method
-            let speechLengthMs = self.speechSummaryStream!.getTotalSpeechSummary().speechInfo.speechLengthMs
+            let speechLengthMs = self.speechSummaryStream.getTotalSpeechSummary().speechInfo.speechLengthMs
             
             DispatchQueue.main.async {
                 if self.verificationMode == .TextDependent || self.verificationMode == .TextIndependent {
@@ -102,7 +114,7 @@ class AudioRecorder {
             }
             
             // 3) Compare speech length and silence length to determine if speech is already ended
-            let backgroundLength = self.speechSummaryStream!.getCurrentBackgroundLength()
+            let backgroundLength = self.speechSummaryStream.getCurrentBackgroundLength()
             
             // 4) Stop recording if minimum speech length is achieved (In "Continuous Verification" mode speech length is ignored).
             if self.verificationMode != .Continuous {
@@ -135,12 +147,13 @@ class AudioRecorder {
                               AVNumberOfChannelsKey:2, AVEncoderBitRateKey:12800,
                               AVLinearPCMBitDepthKey:16,
                               AVEncoderAudioQualityKey:AVAudioQuality.max.rawValue] as [String : Any]
-        // Prepare audio recorder to record
+        // Initialize AVAudioRecorder with settings and prepare to record
         try! self.audioRecorder = AVAudioRecorder(url: fileURL, settings: recordSettings)
         audioRecorder!.prepareToRecord()
         
         do {
             try ExceptionTranslator.catchException {
+                // Install an audio tap on the bus to get access to the audio data for record, monitor, and observe the output of the node
                 self.audioEngine.inputNode.installTap(onBus: 0, bufferSize: 4096, format: inputFormat, block: bufferClosure)
                 self.status = .Recording
                 try! self.audioEngine.start()
@@ -168,7 +181,9 @@ class AudioRecorder {
             audioRecorder!.stop()
             
             DispatchQueue.main.async {
-                self.delegate?.onRecordStop(data: self.data!, sampleRate: Int(self.sampleRate))
+                if let data = self.data{
+                    self.delegate?.onRecordStop(data: data, sampleRate: Int(self.sampleRate))
+                }
             }
             status = .Idle
         }
