@@ -144,7 +144,7 @@ class AudioRecorder {
         // Set the recording settings suitable for speech recording with maximum quality
         let recordSettings = [AVFormatIDKey:kAudioFormatLinearPCM,
                               AVSampleRateKey:sampleRate,
-                              AVNumberOfChannelsKey:2, AVEncoderBitRateKey:12800,
+                              AVNumberOfChannelsKey:1,
                               AVLinearPCMBitDepthKey:16,
                               AVEncoderAudioQualityKey:AVAudioQuality.max.rawValue] as [String : Any]
         // Initialize AVAudioRecorder with settings and prepare to record
