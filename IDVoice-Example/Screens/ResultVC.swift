@@ -1,8 +1,6 @@
 //
 //  ResultViewController.swift
 //  IDVoice-Example
-//
-//  Created by renks on 30.07.2020.
 //  Copyright © 2020 ID R&D. All rights reserved.
 //
 
@@ -28,7 +26,7 @@ class ResultViewController: UIViewController {
     
     fileprivate func configureUI() {
         view.setBackgroundColor()
-        closeButton.layer.cornerRadius = 10
+        closeButton.layer.cornerRadius = 20
         closeButton.clipsToBounds = true
         
         if #available(iOS 13.0, *) {

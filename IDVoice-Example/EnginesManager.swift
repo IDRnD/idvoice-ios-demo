@@ -1,17 +1,15 @@
 //
 //  EnginesManager.swift
 //  IDVoice-Example
-//
-//  Created by renks on 29.07.2020.
 //  Copyright © 2020 ID R&D. All rights reserved.
 //
 
 import Foundation
 
 enum VerificationMode {
-    case TextDependent
-    case TextIndependent
-    case Continuous
+    case textDependent
+    case textIndependent
+    case continuous
 }
 
 class VoiceEngineManager {
@@ -40,12 +38,12 @@ class VoiceEngineManager {
     
     func getVoiceTemplateFactory(for voiceTemplateType: VerificationMode) -> VoiceTemplateFactory? {
         switch voiceTemplateType {
-        case .TextDependent:
+        case .textDependent:
             if textDependentVoiceTemplateFactory == nil {
                 textDependentVoiceTemplateFactory = VoiceTemplateFactory(path: Globals.voiceTemplateFactoryAndMatcherTDInitDataPath)
                 return textDependentVoiceTemplateFactory
             }
-        case .TextIndependent:
+        case .textIndependent:
             if textIndependentVoiceTemplateFactory == nil {
                 textIndependentVoiceTemplateFactory = VoiceTemplateFactory(path: Globals.voiceTemplateFactoryAndMatcherTIInitDataPath)
                 return textIndependentVoiceTemplateFactory
@@ -59,12 +57,12 @@ class VoiceEngineManager {
     
     func getVoiceTemplateMatcher(for voiceTemplateType: VerificationMode) -> VoiceTemplateMatcher? {
         switch voiceTemplateType {
-        case .TextDependent:
+        case .textDependent:
             if textDependentVoiceTemplateMatcher == nil {
                 textDependentVoiceTemplateMatcher = VoiceTemplateMatcher(path: Globals.voiceTemplateFactoryAndMatcherTDInitDataPath)
                 return textDependentVoiceTemplateMatcher
             }
-        case .TextIndependent:
+        case .textIndependent:
             if textIndependentVoiceTemplateMatcher == nil {
                 textIndependentVoiceTemplateMatcher = VoiceTemplateMatcher(path: Globals.voiceTemplateFactoryAndMatcherTIInitDataPath)
                 return textIndependentVoiceTemplateMatcher

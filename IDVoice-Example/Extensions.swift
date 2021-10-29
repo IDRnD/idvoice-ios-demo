@@ -1,8 +1,6 @@
 //
 //  Extensions.swift
 //  IDVoice-Example
-//
-//  Created by renks on 28.07.2020.
 //  Copyright © 2020 ID R&D. All rights reserved.
 //
 
@@ -11,15 +9,15 @@ import UIKit
 extension UIColor {
     // Colors
     static let grayColor = UIColor(red: 127 / 255, green: 127 / 255, blue: 127 / 255, alpha: 1)
-    static let accentColor = UIColor(red: 39 / 255, green: 145 / 255, blue: 111 / 255, alpha: 1)
+    static let accentColor = UIColor(red: 46 / 255, green: 177 / 255, blue: 135 / 255, alpha: 1)
     static let redColor = UIColor(red: 201 / 255, green: 80 / 255, blue: 80 / 255, alpha: 1)
 }
 
 extension UIViewController {
-    func presentAlert(title: String, message: String, buttonTitle: String) {
-        DispatchQueue.main.async {
+    func presentAlert(title: String, message: String, buttonTitle: String, completion: ((UIAlertAction) -> Void)? = nil) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             let alertVC = UIAlertController(title: title, message: message, preferredStyle: .alert)
-            let alertAction = UIAlertAction(title: buttonTitle, style: .default)
+            let alertAction = UIAlertAction(title: buttonTitle, style: .default, handler: completion)
             alertVC.addAction(alertAction)
             alertVC.modalPresentationStyle = .overFullScreen
             alertVC.modalTransitionStyle = .crossDissolve

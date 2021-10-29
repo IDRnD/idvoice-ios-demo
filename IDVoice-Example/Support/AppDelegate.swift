@@ -1,8 +1,6 @@
 //
 //  AppDelegate.swift
 //  IDVoice-Example
-//
-//  Created by renks on 28.07.2020.
 //  Copyright © 2020 ID R&D. All rights reserved.
 //
 
@@ -40,21 +38,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Default Liveness threshold
         let defaultLivenessThreshold: Float = 0.5
         
+        // Default Enrollment quality check setting
+        let defaultEnrollmentQualityCheckEnabled: Bool = true
+        
+        
         UserDefaults.standard.register(defaults: [
             Globals.verificationThresholdKey: defaultVerificationThreshold,
             Globals.isLivenessCheckEnabled: defaultLivenessCheckEnabled,
-            Globals.livenessThresholdkey: defaultLivenessThreshold
+            Globals.livenessThresholdkey: defaultLivenessThreshold,
+            Globals.isEnrollmentQualityCheckEnabled: defaultEnrollmentQualityCheckEnabled
         ])
     }
     
     
     fileprivate func initializeVoiceEngines() {
         // Initializing Voice Engines
-        Globals.textDependentVoiceTemplateFactory = VoiceEngineManager.shared.getVoiceTemplateFactory(for: .TextDependent)
-        Globals.textDependentVoiceTemplateMatcher = VoiceEngineManager.shared.getVoiceTemplateMatcher(for: .TextDependent)
+        Globals.textDependentVoiceTemplateFactory = VoiceEngineManager.shared.getVoiceTemplateFactory(for: .textDependent)
+        Globals.textDependentVoiceTemplateMatcher = VoiceEngineManager.shared.getVoiceTemplateMatcher(for: .textDependent)
         
-        Globals.textIndependentVoiceTemplateFactory = VoiceEngineManager.shared.getVoiceTemplateFactory(for: .TextIndependent)
-        Globals.textIndependentVoiceTemplateMatcher = VoiceEngineManager.shared.getVoiceTemplateMatcher(for: .TextIndependent)
+        Globals.textIndependentVoiceTemplateFactory = VoiceEngineManager.shared.getVoiceTemplateFactory(for: .textIndependent)
+        Globals.textIndependentVoiceTemplateMatcher = VoiceEngineManager.shared.getVoiceTemplateMatcher(for: .textIndependent)
         
         Globals.speechSummaryEngine = VoiceEngineManager.shared.getSpeechSummaryEngine()
         Globals.snrComputer = VoiceEngineManager.shared.getSNRComputer()

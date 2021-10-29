@@ -1,8 +1,6 @@
 //
 //  Globals.swift
 //  IDVoice-Example
-//
-//  Created by renks on 28.07.2020.
 //  Copyright © 2020 ID R&D. All rights reserved.
 //
 
@@ -21,12 +19,19 @@ struct Globals {
     static var antiSpoofingEngine: AntispoofEngine?
     static var snrComputer: SNRComputer?
     
+    // Directories for audio files saving
+    struct Directory {
+        static let document = try! FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+        static let temp = document.appendingPathComponent("temp")
+    }
+    
     // UserDefaults keys
     static let textDependentVoiceTemplateKey = "text_dependent_voice_template"
     static let textIndependentVoiceTemplateKey = "text_independent_voice_template"
     static let verificationThresholdKey = "verification_threshold"
     static let livenessThresholdkey = "liveness_threshold"
     static let isLivenessCheckEnabled = "liveness_check_enabled"
+    static let isEnrollmentQualityCheckEnabled = "enrollment_quality_check_enabled"
     
     // Speech analysis parameters
     static let minSpeechLengthMsTextDependentEnroll: Float = 500
@@ -35,11 +40,17 @@ struct Globals {
     static let minSpeechLengthMsForTextDependentVerify: Float = 500
     static let maxSilenceLengthMs: Float = 300
     
+    // Parameters for enrollment recordings quality check
+    static let enrollmentTemplatesMatchingThreshold: Float = 0.5
+    
+    // FileManager Directory URL
+    static let documentDirectoryUrl = try! FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+    
     // Engines Initialization data paths
-    static let voiceTemplateFactoryAndMatcherTDInitDataPath = Bundle.main.resourcePath! + "/verify/TD-mic/"
+    static let voiceTemplateFactoryAndMatcherTDInitDataPath = Bundle.main.resourcePath! + "/verify/TD-mic-accurate/"
     static let voiceTemplateFactoryAndMatcherTIInitDataPath = Bundle.main.resourcePath! + "/verify/TI-mic/"
     static let speechSummaryInitDataPath = Bundle.main.resourcePath! + "/media/speech_summary/"
-    static let antispoofInitDataPath = Bundle.main.resourcePath! + "/antispoof2/"
+    static let antispoofInitDataPath = Bundle.main.resourcePath! + "/antispoof2/default/"
     
     // Instruction Strings
     static let textDependentEnrollmentInstruction = "\nTo enroll in Text Dependent mode please provide 3 voice recordings with 'Golden State Warriors' phrase.\n\nPress Record to start recording."
@@ -51,5 +62,4 @@ struct Globals {
     static let textIndependentEnrollmentRecorderInstuction = "Please provide at least \(Int(minSpeechLengthMsTextIndependentEnroll / 1000)) seconds of speech."
     static let textIndependentVerificationRecorderInstuction = "Please say anything you want"
     static let continuousVerificationRecorderInstuction = "Listening for a stream of speech..."
-
 }

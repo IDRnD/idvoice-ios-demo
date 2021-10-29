@@ -1,8 +1,6 @@
 //
 //  VerificationViewController.swift
 //  IDVoice-Example
-//
-//  Created by renks on 28.07.2020.
 //  Copyright © 2020 ID R&D. All rights reserved.
 //
 
@@ -23,8 +21,7 @@ class VerificationViewController: UIViewController {
     private var verificationProbability: Float = 0
     private var livenessScore: Float = 0
     private var isSpoof: Bool = true
-    private var minSpeechLength: Float = 0.5 // Default minimum amout of speech for verification in milliseconds. This parameter value is set depending on used mode (Text Dependent, Text Independent).
-    
+    private var minSpeechLengthMs: Float = 500 // Default minimum amout of speech for verification in milliseconds. This parameter value is set depending on used mode (Text Dependent, Text Independent).
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -36,14 +33,14 @@ class VerificationViewController: UIViewController {
     
     fileprivate func setVoiceEngineParameters() {
         switch verificationMode {
-        case .TextDependent:
+        case .textDependent:
             voiceTemplateFactory = Globals.textDependentVoiceTemplateFactory
             voiceTemplateMatcher = Globals.textDependentVoiceTemplateMatcher
-            minSpeechLength = Globals.minSpeechLengthMsForTextDependentVerify
-        case .TextIndependent:
+            minSpeechLengthMs = Globals.minSpeechLengthMsForTextDependentVerify
+        case .textIndependent:
             voiceTemplateFactory = Globals.textIndependentVoiceTemplateFactory
             voiceTemplateMatcher = Globals.textIndependentVoiceTemplateMatcher
-            minSpeechLength = Globals.minSpeechLengthMsForTextIndependentVerify
+            minSpeechLengthMs = Globals.minSpeechLengthMsForTextIndependentVerify
         default:
             break
         }
@@ -59,11 +56,11 @@ class VerificationViewController: UIViewController {
     
     fileprivate func setInstructionText() {
         switch verificationMode {
-        case .TextDependent:
+        case .textDependent:
             instructionsLabel.text = Globals.textDependentVerificationInstruction
-        case .TextIndependent:
+        case .textIndependent:
             instructionsLabel.text = Globals.textIndependentVerificationInstruction
-        case .Continuous:
+        case .continuous:
             instructionsLabel.text = Globals.textIndependentContinuousVerificationInstruction
             self.title = "Continuous Verification"
         default:
@@ -74,7 +71,7 @@ class VerificationViewController: UIViewController {
     
     fileprivate func configureUI() {
         view.setBackgroundColor()
-        recordButton.layer.cornerRadius = 10
+        recordButton.layer.cornerRadius = 20
         recordButton.clipsToBounds = true
         recordButton.backgroundColor = .redColor
         
@@ -86,11 +83,11 @@ class VerificationViewController: UIViewController {
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "showRecordingView" {
-            let view = segue.destination as! RecordingViewController
-            view.verificationMode = verificationMode
-            view.mode = .Verification
-            view.minSpeechLengthMs = minSpeechLength
-            view.onStopRecordingCallback = self.stopRecording
+            let vc = segue.destination as! RecordingViewController
+            vc.verificationMode = verificationMode
+            vc.mode = .Verification
+            vc.minSpeechLengthMs = minSpeechLengthMs
+            vc.delegate = self
         } else if segue.identifier == "showResultsView" {
             let view = segue.destination as! ResultViewController
             view.verificationScore = verificationProbability
@@ -104,8 +101,8 @@ class VerificationViewController: UIViewController {
     }
     
     
-    fileprivate func stopRecording(data: Data, sampleRate: Int) {
-        let templateKey = verificationMode == .TextDependent ? Globals.textDependentVoiceTemplateKey : Globals.textIndependentVoiceTemplateKey
+    fileprivate func stopRecording(data: Data, sampleRate: Int, audioMetrics: AudioMetrics?) {
+        let templateKey = verificationMode == .textDependent ? Globals.textDependentVoiceTemplateKey : Globals.textIndependentVoiceTemplateKey
         
         // Voice verification
         do {
@@ -143,8 +140,14 @@ class VerificationViewController: UIViewController {
                 self.presentAlert(title: "Error", message: "Something went wrong. Liveness check was not done.", buttonTitle: "Okay")
                 return
             }
-            
         }
+        
+        if let audioMetrics = audioMetrics {
+            // You can implement some specific logic for voice verification
+            // using various audio metrics such as signal-to-noise ratio, speech length etc.
+            print("SNR: \(audioMetrics.snrDb), Audio Duration (Ms): \(audioMetrics.audioDurationMs), Speech Duration (Ms): \(audioMetrics.speechDurationMs),")
+        }
+        
         performSegue(withIdentifier: "showResultsView", sender: nil)
     }
     
@@ -174,7 +177,20 @@ class VerificationViewController: UIViewController {
         }
     }
     
+    
     deinit {
         VoiceEngineManager.shared.deinitAntiSpoofingEngine()
+    }
+}
+
+
+extension VerificationViewController: RecordingViewControllerDelegate {
+    func onRecordStop(data: Data, sampleRate: Int, audioMetrics: AudioMetrics?) {
+        self.stopRecording(data: data, sampleRate: sampleRate, audioMetrics: audioMetrics)
+    }
+    
+    
+    func onError(errorText: String) {
+        self.presentAlert(title: "Error", message: errorText, buttonTitle: "Okay")
     }
 }

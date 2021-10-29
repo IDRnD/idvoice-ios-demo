@@ -1,8 +1,6 @@
 //
 //  SettingsViewController.swift
 //  IDVoice-Example
-//
-//  Created by renks on 28.07.2020.
 //  Copyright © 2020 ID R&D. All rights reserved.
 //
 
@@ -13,6 +11,7 @@ class SettingsViewController: UIViewController {
     @IBOutlet weak var verificationThresholdSlider: UISlider!
     @IBOutlet weak var verificationThresholdLabel: UILabel!
     @IBOutlet weak var livenessCheckSwitch: UISwitch!
+    @IBOutlet weak var enrollmentQualityCheckSwitch: UISwitch!
     @IBOutlet weak var livenessThresholdSlider: UISlider!
     @IBOutlet weak var livenessThresholdStack: UIStackView!
     @IBOutlet weak var livenessThresholdLabel: UILabel!
@@ -35,7 +34,7 @@ class SettingsViewController: UIViewController {
     
     fileprivate func configureUI() {
         view.setBackgroundColor()
-        resetEnrollmentsButton.layer.cornerRadius = 10
+        resetEnrollmentsButton.layer.cornerRadius = 20
         resetEnrollmentsButton.clipsToBounds = true
         
         // Checking if Liveness Check is disabled to hide / show liveness threshold setting
@@ -73,11 +72,8 @@ class SettingsViewController: UIViewController {
     
     
     fileprivate func initSettingsSwitches() {
-        if let isLivenessCheckEnabled = UserDefaults.standard.value(forKey: Globals.isLivenessCheckEnabled) as? Bool {
-            self.livenessCheckSwitch.isOn = isLivenessCheckEnabled
-        } else {
-            UserDefaults.standard.set(true, forKey: Globals.isLivenessCheckEnabled)
-        }
+        self.livenessCheckSwitch.isOn = UserDefaults.standard.bool(forKey: Globals.isLivenessCheckEnabled)
+        self.enrollmentQualityCheckSwitch.isOn = UserDefaults.standard.bool(forKey: Globals.isEnrollmentQualityCheckEnabled)
     }
     
     
@@ -108,6 +104,12 @@ class SettingsViewController: UIViewController {
                 self.livenessThresholdStack.isHidden = true
             }
         }
+    }
+    
+    
+    @IBAction func enrollmentQualityCheckSwitchChanged(_ sender: UISwitch) {
+        let currentSetting = sender.isOn
+        UserDefaults.standard.set(currentSetting, forKey: Globals.isEnrollmentQualityCheckEnabled)
     }
     
     

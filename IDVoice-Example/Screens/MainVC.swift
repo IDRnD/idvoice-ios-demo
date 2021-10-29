@@ -1,8 +1,6 @@
 //
 //  ViewController.swift
 //  IDVoice-Example
-//
-//  Created by renks on 28.07.2020.
 //  Copyright © 2020 ID R&D. All rights reserved.
 //
 
@@ -16,7 +14,7 @@ class MainViewController: UIViewController {
     @IBOutlet weak var segmentedControl: UISegmentedControl!
     @IBOutlet weak var settingsButton: UIButton!
     
-    private var verificationMode: VerificationMode = .TextDependent
+    private var verificationMode: VerificationMode = .textDependent
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -51,7 +49,7 @@ class MainViewController: UIViewController {
         
         if segue.identifier == "showContinuousVerificationView" {
             let vc = segue.destination as! VerificationViewController
-            vc.verificationMode = .Continuous
+            vc.verificationMode = .continuous
         }
     }
     
@@ -62,7 +60,7 @@ class MainViewController: UIViewController {
         for button in buttons {
             button?.backgroundColor = .accentColor
             button?.clipsToBounds = true
-            button?.layer.cornerRadius = 10
+            button?.layer.cornerRadius = 20
             if #available(iOS 13.0, *) {
                 button?.layer.cornerCurve = CALayerCornerCurve.continuous
             }
@@ -75,14 +73,14 @@ class MainViewController: UIViewController {
         let textIndependentVoiceTemplate = UserDefaults.standard.data(forKey: Globals.textIndependentVoiceTemplateKey)
         
         switch verificationMode {
-        case .TextDependent:
+        case .textDependent:
             if textDependentVoiceTemplte == nil {
                 verificationButton.isEnabled = false
             } else {
                 verificationButton.isEnabled = true
             }
             continuousVerificationButton.isEnabled = false
-        case .TextIndependent:
+        case .textIndependent:
             if textIndependentVoiceTemplate == nil {
                 verificationButton.isEnabled = false
                 continuousVerificationButton.isEnabled = false
@@ -99,10 +97,10 @@ class MainViewController: UIViewController {
     @IBAction func indexChanged(_ sender: UISegmentedControl) {
         switch segmentedControl.selectedSegmentIndex {
         case 0:
-            verificationMode = .TextDependent
+            verificationMode = .textDependent
             disableButtonsIfNeeded()
         case 1:
-            verificationMode = .TextIndependent
+            verificationMode = .textIndependent
             disableButtonsIfNeeded()
         default:
             break;

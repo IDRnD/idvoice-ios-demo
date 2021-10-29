@@ -1,16 +1,17 @@
 //
 //  RecordingViewController.swift
 //  IDVoice-Example
-//
-//  Created by renks on 28.07.2020.
 //  Copyright © 2020 ID R&D. All rights reserved.
 //
 
 import UIKit
 import AVFoundation
 
-typealias OnStopRecordingCallback = ((_ data: Data, _ sampleRate: Int) -> ())
-typealias OnRecordingErrorCallback = ((_ errorText: String) -> ())
+
+protocol RecordingViewControllerDelegate: AnyObject {
+    func onRecordStop(data: Data, sampleRate: Int, audioMetrics: AudioMetrics?)
+    func onError(errorText: String)
+}
 
 enum Mode {
     case Enrollment
@@ -27,22 +28,24 @@ class RecordingViewController: UIViewController {
     @IBOutlet weak var spinner: UIActivityIndicatorView!
     
     private var audioFilename = ""
-    private var audioRecorder: AudioRecorder?
+    
+    var audioRecorder: AudioRecorder?
+    weak var delegate: RecordingViewControllerDelegate?
+    
     var verificationMode: VerificationMode?
     var mode: Mode?
     var minSpeechLengthMs: Float = 500 // Default minimum amout of speech in recording in milliseconds. This parameters vary depending on used mode (Text Dependent, Text Independent) and scenario (enrollment, verification).
-    
-    var onStopRecordingCallback: OnStopRecordingCallback?
-    var onRecordingErrorCallback: OnRecordingErrorCallback?
-    
+
     
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
         setInstructionText()
         setupBackgroundStateObserver()
-        audioRecorder = AudioRecorder(audioFilename: self.audioFilename, verificationMode: verificationMode!, minSpeechLength: minSpeechLengthMs)
-        audioRecorder?.delegate = self
+        if let verificationMode = verificationMode {
+            audioRecorder = AudioRecorder(verificationMode: verificationMode, minSpeechLength: minSpeechLengthMs)
+            audioRecorder?.delegate = self
+        }
     }
     
     
@@ -60,7 +63,7 @@ class RecordingViewController: UIViewController {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        audioRecorder?.stopRecorder()
+        stopRecorder()
     }
     
     
@@ -78,13 +81,13 @@ class RecordingViewController: UIViewController {
     
     fileprivate func setInstructionText() {
         switch (verificationMode, mode) {
-        case (.TextDependent, _):
+        case (.textDependent, _):
             instructionsLabel.text = Globals.textDependentEnrollmentRecorderInstuction
-        case (.TextIndependent, .Enrollment):
+        case (.textIndependent, .Enrollment):
             instructionsLabel.text = Globals.textIndependentEnrollmentRecorderInstuction
-        case (.TextIndependent, .Verification):
+        case (.textIndependent, .Verification):
             instructionsLabel.text = Globals.textIndependentVerificationRecorderInstuction
-        case (.Continuous, _):
+        case (.continuous, _):
             instructionsLabel.text = Globals.continuousVerificationRecorderInstuction
             metricNameLabel.text = "Verification Score:"
             if #available(iOS 13.0, *) {
@@ -106,8 +109,10 @@ class RecordingViewController: UIViewController {
     }
     
     
-    @objc func stopRecorder() {
-        audioRecorder?.stopRecorder()
+    @objc fileprivate func stopRecorder() {
+        audioRecorder?.status = .aborted
+        audioRecorder?.stopRecording(audioMetrics: nil)
+        dismiss(animated: true, completion: nil)
     }
     
     
@@ -117,29 +122,59 @@ class RecordingViewController: UIViewController {
     
 }
 
+
 extension RecordingViewController: AudioRecorderDelegate {
+    private func passVoiceData(data: Data, sampleRate: Int, audioMetrics: AudioMetrics?, actionClosure: @escaping () -> Void) {
+        self.delegate?.onRecordStop(data: data, sampleRate: sampleRate, audioMetrics: audioMetrics)
+        actionClosure()
+    }
+    
     
     func onAnalyzing() {
-        spinner.startAnimating()
-    }
-    
-    
-    func onRecordStop(data: Data, sampleRate: Int) {
-        self.dismiss(animated: true, completion: nil)
-        self.onStopRecordingCallback?(data, sampleRate)
-    }
-    
-    func onError(errorText: String) {
-        self.dismiss(animated: true) { [weak self] in
-            self?.onRecordingErrorCallback?(errorText)
+        DispatchQueue.main.async {
+            UIView.animate(withDuration: 0.3) {
+                self.spinner.isHidden = false
+                self.micImage.alpha = 0
+                self.spinner.startAnimating()
+            }
         }
     }
     
-    func onSpeechLengthAvailable(speechLength: Double) {
-        self.metricAmountLabel.text = String(format: "%.1f s", speechLength / 1000)
+    
+    func onContinuousVerificationScoreAvailable(verificationScore: Float, backgroundLengthMs: Float) {
+        if backgroundLengthMs != 0 && backgroundLengthMs > 2000 {
+            metricAmountLabel.text = "No Speech"
+            metricAmountLabel.alpha = 0.3
+        } else {
+            metricAmountLabel.text = "\(Int(verificationScore))%"
+            metricAmountLabel.alpha = 1
+        }
     }
     
-    func onContinuousVerificationScoreAvailable(verificationScore: Float) {
-        self.metricAmountLabel.text = "\(Int(verificationScore))%"
+    
+    func onRecordStop(data: Data, sampleRate: Int, audioMetrics: AudioMetrics?) {
+        passVoiceData(data: data, sampleRate: sampleRate, audioMetrics: audioMetrics) {
+            DispatchQueue.main.async {
+                self.dismiss(animated: true, completion: nil)
+            }
+        }
     }
+    
+    
+    func onError(errorText: String) {
+        DispatchQueue.main.async {
+            self.delegate?.onError(errorText: errorText)
+        }
+    }
+    
+    
+    func onSpeechLengthAvailable(speechLength: Double) {
+        metricAmountLabel.text = String(format: "%.1f s", speechLength / 1000)
+    }
+    
+    
+    func onLongSilence() {
+        dismiss(animated: true, completion: nil)
+    }
+    
 }

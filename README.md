@@ -1,12 +1,12 @@
 iOS IDVoice sample application overview
 ===========================================
 
-**The application code is compatible with VoiceSDK 3.0. See tag 'v2.14' for VoiceSDK 2.13 and 2.14 support**
+**The application code is compatible with VoiceSDK 3.2.4. See tag '2.14' for VoiceSDK 2.13 and 2.14 support**
 
 This sample application is intended to demonstrate the VoiceSDK voice verification 
 and anti-spoofing capabilities:
 
-* It provides a simple text-dependent enrollment and voice verification scenario: user enrolls with three entries of their voice to create a strong voiceprint. Then they can use the created voiceprint for voice verification. By enrolling for the second time user overwrites their voiceprint.
+* It provides a simple text-dependent enrollment and voice verification scenario: user enrolls with three entries of their voice to create a strong voiceprint. Variours quality checks are performed on enrollment recordings. Then they can use the created voiceprint for voice verification.  By enrolling for the second time user overwrites their voiceprint.
 
 * It provides simple text-independent enrollment and verification scenario: user enrolls with 10 seconds of their speech to create a strong voiceprint. By enrolling for the second time user overwrites their voiceprint.
 
@@ -30,7 +30,8 @@ Developer tips
 
 - This repository does not contain VoiceSDK distribution itself. Please copy libs/VoiceSdk.framework and the contents of init_data folder from the IDVoice + IDLive iOS package received from ID R&D to the VoiceSDK/ folder in order to be able to build and run the application. You can see/modify Initialization paths in `Globals.swift`  file.
 - See `EnginesManager.swift`  and `AppDelegate.swift` for verification and speech summary engines initialization code
-- See `AudioRecorder.swift` for voice recording with speech analysis code
+- See `AudioRecorderBase.swift` for voice recording and buffering
+- See `AudioRecorder.swift` for voice processing with speech analysis
 - See `EnrollmentVC.swift` for voice template creation code and singal-to-noise ratio (SNR) computation code
 - See `VerificationVC.swift` for voice templates matching code
 
