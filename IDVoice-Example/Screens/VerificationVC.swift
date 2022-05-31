@@ -6,6 +6,7 @@
 
 import UIKit
 import AVFoundation
+import VoiceSdk
 
 class VerificationViewController: UIViewController {
     
@@ -21,7 +22,9 @@ class VerificationViewController: UIViewController {
     private var verificationProbability: Float = 0
     private var livenessScore: Float = 0
     private var isSpoof: Bool = true
-    private var minSpeechLengthMs: Float = 500 // Default minimum amout of speech for verification in milliseconds. This parameter value is set depending on used mode (Text Dependent, Text Independent).
+    // Default minimum amout of speech for verification in milliseconds.
+    // This parameter value is set depending on used mode (Text Dependent, Text Independent).
+    private var minSpeechLengthMs = Globals.minSpeechLengthMs
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -29,7 +32,6 @@ class VerificationViewController: UIViewController {
         setInstructionText()
         configureUI()
     }
-    
     
     fileprivate func setVoiceEngineParameters() {
         switch verificationMode {
@@ -44,7 +46,7 @@ class VerificationViewController: UIViewController {
         default:
             break
         }
-    
+        
         // Check if Liveness Check is enabled and if so initialise Liveness Engine
         let livenessCheckEnabled = UserDefaults.standard.bool(forKey: Globals.isLivenessCheckEnabled)
         
@@ -52,7 +54,6 @@ class VerificationViewController: UIViewController {
             livenessEngine = VoiceEngineManager.shared.getAntiSpoofingEngine()
         }
     }
-    
     
     fileprivate func setInstructionText() {
         switch verificationMode {
@@ -68,7 +69,6 @@ class VerificationViewController: UIViewController {
         }
     }
     
-    
     fileprivate func configureUI() {
         view.setBackgroundColor()
         recordButton.layer.cornerRadius = 20
@@ -79,7 +79,6 @@ class VerificationViewController: UIViewController {
             recordButton?.layer.cornerCurve = CALayerCornerCurve.continuous
         }
     }
-    
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "showRecordingView" {
@@ -95,34 +94,31 @@ class VerificationViewController: UIViewController {
         }
     }
     
-    
     fileprivate func showErrorAlert(with message: String) {
         self.presentAlert(title: "Error", message: message, buttonTitle: "Ok")
     }
     
-    
     fileprivate func stopRecording(data: Data, sampleRate: Int, audioMetrics: AudioMetrics?) {
-        let templateKey = verificationMode == .textDependent ? Globals.textDependentVoiceTemplateKey : Globals.textIndependentVoiceTemplateKey
+        let templateKey = verificationMode == .textDependent ?
+        Globals.textDependentVoiceTemplateKey : Globals.textIndependentVoiceTemplateKey
         
         // Voice verification
         do {
-            try ExceptionTranslator.catchException {
-                // 1) Load user enrollment template
-                guard let templateData = UserDefaults.standard.data(forKey: templateKey) else { return }
-                let enrollTemplate = VoiceTemplate(bytes: templateData)
-                
-                // 2) Create verification template from recording
-                let verifyTemplate = self.voiceTemplateFactory?.createVoiceTemplate(data, sampleRate: sampleRate)
-                
-                // 3) Match templates
-                if let verifyTemplate = verifyTemplate {
-                    self.verificationProbability = self.voiceTemplateMatcher?.matchVoiceTemplates(enrollTemplate, template2: verifyTemplate).probability ?? 0
-                }
-                
+            // 1) Load user enrollment template
+            guard let templateData = UserDefaults.standard.data(forKey: templateKey) else { return }
+            let enrollTemplate = try VoiceTemplate(bytes: templateData)
+            
+            // 2) Create verification template from recording
+            let verifyTemplate = try self.voiceTemplateFactory?.createVoiceTemplate(data, sampleRate: sampleRate)
+            
+            // 3) Match templates
+            if let verifyTemplate = verifyTemplate {
+                self.verificationProbability = try self.voiceTemplateMatcher?.matchVoiceTemplates(
+                    enrollTemplate, template2: verifyTemplate).probability ?? 0
             }
         } catch {
-            print(error)
-            self.presentAlert(title: "Error", message: "Something went wrong. Verification was not done.", buttonTitle: "Okay")
+            print(error.localizedDescription)
+            self.presentAlert(title: "Error", message: error.localizedDescription, buttonTitle: "Okay")
             return
         }
         
@@ -132,12 +128,10 @@ class VerificationViewController: UIViewController {
         if livenessCheckEnabled {
             // 1) Perform anti-spoofing check
             do {
-                try ExceptionTranslator.catchException({
-                    self.livenessScore = self.livenessEngine?.isSpoof(data, sampleRate: Int32(sampleRate)).score ?? 0
-                })
+                self.livenessScore = try self.livenessEngine?.isSpoof(data, sampleRate: Int32(sampleRate)).score ?? 0
             } catch {
-                print(error)
-                self.presentAlert(title: "Error", message: "Something went wrong. Liveness check was not done.", buttonTitle: "Okay")
+                print(error.localizedDescription)
+                self.presentAlert(title: "Error", message: error.localizedDescription, buttonTitle: "Okay")
                 return
             }
         }
@@ -150,7 +144,6 @@ class VerificationViewController: UIViewController {
         
         performSegue(withIdentifier: "showResultsView", sender: nil)
     }
-    
     
     @IBAction func transitToRecorder(_ sender: UIButton) {
         // Checking Microphone permission
@@ -166,7 +159,7 @@ class VerificationViewController: UIViewController {
                     }
                 }
             }
-        } else if AVAudioSession.sharedInstance().recordPermission == .denied{
+        } else if AVAudioSession.sharedInstance().recordPermission == .denied {
             DispatchQueue.main.async {
                 self.showMicrophoneAccessAlert()
             }
@@ -177,18 +170,15 @@ class VerificationViewController: UIViewController {
         }
     }
     
-    
     deinit {
         VoiceEngineManager.shared.deinitAntiSpoofingEngine()
     }
 }
 
-
 extension VerificationViewController: RecordingViewControllerDelegate {
     func onRecordStop(data: Data, sampleRate: Int, audioMetrics: AudioMetrics?) {
         self.stopRecording(data: data, sampleRate: sampleRate, audioMetrics: audioMetrics)
     }
-    
     
     func onError(errorText: String) {
         self.presentAlert(title: "Error", message: errorText, buttonTitle: "Okay")

@@ -24,7 +24,7 @@ protocol AudioRecorderDelegate: AnyObject {
     func onError(errorText: String)
     func onSpeechLengthAvailable(speechLength: Double)
     func onNewData(buffer: Data)
-    func onContinuousVerificationScoreAvailable(verificationScore: Float, backgroundLengthMs: Float)
+    func onContinuousVerificationProbabilityAvailable(verificationProbability: Float, backgroundLengthMs: Float)
     func onLongSilence()
     func onAnalyzing()
 }
@@ -56,18 +56,15 @@ class AudioRecorderBase {
         sampleRate = Int(self.engine.inputNode.inputFormat(forBus: 0).sampleRate)
     }
     
-    
     deinit {
         delegate = nil
         print("Audio Recorder deinited in state: \(status)")
         stopRecording()
     }
     
-    
     func reset() {
         data = nil
     }
-    
     
     open func startRecording() {
         reset()
@@ -78,11 +75,17 @@ class AudioRecorderBase {
         print("Microphone gain: \(AVAudioSession.sharedInstance().inputGain)")
         print("\n")
         // Initialize a newly allocated audio format instance depending on device hardware
-        let inputFormat = AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: Double(sampleRate), channels: 1, interleaved: false)!
+        let inputFormat = AVAudioFormat(
+            commonFormat: .pcmFormatInt16,
+            sampleRate: Double(sampleRate),
+            channels: 1,
+            interleaved: false)!
         let bufferClosure: AVAudioNodeTapBlock = { buffer, time in
             // Retrieve audio buffer and append it to saved data
             let channels = UnsafeBufferPointer(start: buffer.int16ChannelData, count: 1)
-            let bufferData = NSData(bytes: channels[0], length:Int(buffer.frameCapacity * buffer.format.streamDescription.pointee.mBytesPerFrame)) as Data
+            let bufferData = NSData(
+                bytes: channels[0],
+                length: Int(buffer.frameCapacity * buffer.format.streamDescription.pointee.mBytesPerFrame)) as Data
             self.processBuffer(bufferData, time: time)
         }
         
@@ -100,7 +103,10 @@ class AudioRecorderBase {
          */
         
         do {
-            try AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.playAndRecord, mode: AVAudioSession.Mode.measurement) // 'measurment' mode is especially important for the correct work of VoiceSDK Anti-Spoofing check.
+            try AVAudioSession.sharedInstance().setCategory(
+                AVAudioSession.Category.playAndRecord,
+                mode: AVAudioSession.Mode.measurement)
+            // 'measurment' mode is especially important for the correct work of VoiceSDK Anti-Spoofing check.
             try AVAudioSession.sharedInstance().setActive(true)
             self.engine.inputNode.installTap(onBus: 0, bufferSize: 4096, format: inputFormat, block: bufferClosure)
             try self.engine.start()
@@ -114,7 +120,6 @@ class AudioRecorderBase {
             }
         }
     }
-    
     
     func processBuffer(_ buffer: Data, time: AVAudioTime) {
         self.data?.append(buffer)

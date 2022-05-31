@@ -22,19 +22,16 @@ class MainViewController: UIViewController {
         disableButtonsIfNeeded()
     }
     
-    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
         disableButtonsIfNeeded()
     }
     
-    
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         navigationController?.setNavigationBarHidden(false, animated: animated)
     }
-    
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "showEnrollmentView" {
@@ -53,7 +50,6 @@ class MainViewController: UIViewController {
         }
     }
     
-    
     fileprivate func configureUI() {
         view.setBackgroundColor()
         let buttons = [enrollmentButton, verificationButton, continuousVerificationButton]
@@ -66,7 +62,6 @@ class MainViewController: UIViewController {
             }
         }
     }
-    
     
     fileprivate func disableButtonsIfNeeded() {
         let textDependentVoiceTemplte = UserDefaults.standard.data(forKey: Globals.textDependentVoiceTemplateKey)
@@ -93,7 +88,6 @@ class MainViewController: UIViewController {
         }
     }
     
-    
     @IBAction func indexChanged(_ sender: UISegmentedControl) {
         switch segmentedControl.selectedSegmentIndex {
         case 0:
@@ -103,23 +97,19 @@ class MainViewController: UIViewController {
             verificationMode = .textIndependent
             disableButtonsIfNeeded()
         default:
-            break;
+            break
         }
     }
-    
     
     @IBAction func transitToEnrollment(_ sender: UIButton) {
         performSegue(withIdentifier: "showEnrollmentView", sender: self)
     }
     
-    
     @IBAction func transitToVerification(_ sender: UIButton) {
         performSegue(withIdentifier: "showVerificationView", sender: self)
     }
-    
     
     @IBAction func transitToContinuousVerification(_ sender: Any) {
         performSegue(withIdentifier: "showContinuousVerificationView", sender: self)
     }
 }
-

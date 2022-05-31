@@ -23,7 +23,6 @@ class ResultViewController: UIViewController {
         setResults()
     }
     
-    
     fileprivate func configureUI() {
         view.setBackgroundColor()
         closeButton.layer.cornerRadius = 20
@@ -33,7 +32,6 @@ class ResultViewController: UIViewController {
             closeButton?.layer.cornerCurve = CALayerCornerCurve.continuous
         }
     }
-    
     
     fileprivate func setResults() {
         // Cheking current threshold values
@@ -74,7 +72,6 @@ class ResultViewController: UIViewController {
             verificationScroreLabel.textColor = .redColor
         }
     }
-    
     
     @IBAction func onCloseButtonTap(_ sender: UIButton) {
         navigationController?.popToRootViewController(animated: true)

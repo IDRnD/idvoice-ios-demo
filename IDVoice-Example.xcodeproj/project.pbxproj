@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7DC384BB283791BF008C6D35 /* WAVFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DC384BA283791BE008C6D35 /* WAVFormat.swift */; };
 		8115E584270DBD44001D0348 /* VoiceSdk.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8115E582270DBCBC001D0348 /* VoiceSdk.xcframework */; };
 		8115E585270DBD44001D0348 /* VoiceSdk.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 8115E582270DBCBC001D0348 /* VoiceSdk.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		811BC11D24D31D1A007AD643 /* ResultVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 811BC11C24D31D1A007AD643 /* ResultVC.swift */; };
@@ -44,12 +45,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		7DC384BA283791BE008C6D35 /* WAVFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WAVFormat.swift; sourceTree = "<group>"; };
 		8115E582270DBCBC001D0348 /* VoiceSdk.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = VoiceSdk.xcframework; path = VoiceSDK/VoiceSdk.xcframework; sourceTree = "<group>"; };
 		811BC11C24D31D1A007AD643 /* ResultVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultVC.swift; sourceTree = "<group>"; };
-		811DAE8425D54FD4008541D3 /* AudioRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
-		81259A6625D55C3B0012F53C /* WAVFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WAVFormat.swift; sourceTree = "<group>"; };
 		8128EE6724D18A4B00D8123C /* EnginesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnginesManager.swift; sourceTree = "<group>"; };
-		8134888824D029310002D72D /* IDVoice-Example-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "IDVoice-Example-Bridging-Header.h"; sourceTree = "<group>"; };
 		8134889424D02CFD0002D72D /* Globals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Globals.swift; sourceTree = "<group>"; };
 		8134889624D02EA00002D72D /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		8134889824D0345A0002D72D /* SettingsVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsVC.swift; sourceTree = "<group>"; };
@@ -87,6 +86,7 @@
 			children = (
 				814E8991270DC49B003365BB /* AudioRecorder.swift */,
 				814E8992270DC49B003365BB /* AudioRecorderBase.swift */,
+				7DC384BA283791BE008C6D35 /* WAVFormat.swift */,
 			);
 			path = Recorders;
 			sourceTree = "<group>";
@@ -114,26 +114,15 @@
 			path = Screens;
 			sourceTree = "<group>";
 		};
-		819465CB27183CB200098E42 /* Recovered References */ = {
-			isa = PBXGroup;
-			children = (
-				811DAE8425D54FD4008541D3 /* AudioRecorder.swift */,
-				81259A6625D55C3B0012F53C /* WAVFormat.swift */,
-			);
-			name = "Recovered References";
-			sourceTree = "<group>";
-		};
 		81DBC1D124D0281500FEC180 = {
 			isa = PBXGroup;
 			children = (
 				81D32A4525090B1C0073E410 /* antispoof2 */,
 				81D32A4425090B1C0073E410 /* media */,
 				81D32A4325090B1C0073E410 /* verify */,
-				8134888824D029310002D72D /* IDVoice-Example-Bridging-Header.h */,
 				8115E582270DBCBC001D0348 /* VoiceSdk.xcframework */,
 				81DBC1DC24D0281500FEC180 /* IDVoice-Example */,
 				81DBC1DB24D0281500FEC180 /* Products */,
-				819465CB27183CB200098E42 /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -243,6 +232,7 @@
 				8134889D24D035E50002D72D /* VerificationVC.swift in Sources */,
 				814E8993270DC49B003365BB /* AudioRecorder.swift in Sources */,
 				81DBC1E224D0281500FEC180 /* MainVC.swift in Sources */,
+				7DC384BB283791BF008C6D35 /* WAVFormat.swift in Sources */,
 				8134889B24D0356D0002D72D /* EnrollmentVC.swift in Sources */,
 				81DBC1DE24D0281500FEC180 /* AppDelegate.swift in Sources */,
 				8128EE6824D18A4B00D8123C /* EnginesManager.swift in Sources */,
@@ -276,7 +266,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -309,6 +298,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -330,6 +320,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				VALID_ARCHS = arm64;
 			};
 			name = Debug;
 		};
@@ -337,7 +328,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -370,6 +360,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -381,11 +372,11 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
-				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				VALIDATE_PRODUCT = YES;
+				VALID_ARCHS = arm64;
 			};
 			name = Release;
 		};
@@ -395,7 +386,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = CQQF4ZK23A;
-				ENABLE_BITCODE = YES;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/VoiceSDK",
@@ -405,10 +396,9 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 3.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.idrnd.IDVoice-Example";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "IDVoice-Example-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -420,7 +410,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = CQQF4ZK23A;
-				ENABLE_BITCODE = YES;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/VoiceSDK",
@@ -430,10 +420,9 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 3.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.idrnd.IDVoice-Example";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "IDVoice-Example-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};

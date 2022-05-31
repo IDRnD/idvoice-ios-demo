@@ -6,6 +6,7 @@
 
 import UIKit
 import AVFoundation
+import VoiceSdk
 
 enum Quality {
     case undetermined
@@ -29,12 +30,16 @@ class EnrollmentViewController: UIViewController {
     private var template: VoiceTemplate?
     
     private var referenceTemplate: VoiceTemplate?
-    private var isEnrollmentQualityCheckEnabled = UserDefaults.standard.bool(forKey: Globals.isEnrollmentQualityCheckEnabled)
+    private var isEnrollmentQualityCheckEnabled = UserDefaults.standard.bool(
+        forKey: Globals.isEnrollmentQualityCheckEnabled
+    )
     
     private let checkFilled = UIImage(named: "ok_on")
     private let checkEmpty = UIImage(named: "ok_off")
     
-    private var minSpeechLengthMs: Float = 500 // Default minimum amount of speech for enrollment in milliseconds. This parameter value is set depending on used mode (Text Dependent, Text Independent).
+    // Default minimum amount of speech for enrollment in milliseconds.
+    // This parameter value is set depending on used mode (Text Dependent, Text Independent).
+    private var minSpeechLengthMs = Globals.minSpeechLengthMs
     private var numberOfTextDependentEnrollments = 3
     
     var verificationMode: VerificationMode?
@@ -53,7 +58,6 @@ class EnrollmentViewController: UIViewController {
         setVoiceEngineParameters()
     }
     
-    
     fileprivate func setVoiceEngineParameters() {
         switch verificationMode {
         case .textDependent:
@@ -68,7 +72,6 @@ class EnrollmentViewController: UIViewController {
             break
         }
     }
-    
     
     fileprivate func configureUI() {
         view.setBackgroundColor()
@@ -88,7 +91,6 @@ class EnrollmentViewController: UIViewController {
         }
     }
     
-    
     fileprivate func setInstructionText() {
         switch verificationMode {
         case .textDependent:
@@ -100,7 +102,6 @@ class EnrollmentViewController: UIViewController {
         }
     }
     
-    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "showRecordingView" {
             let vc = segue.destination as! RecordingViewController
@@ -111,24 +112,27 @@ class EnrollmentViewController: UIViewController {
         }
     }
     
-    
     fileprivate func stopRecording(data: Data, sampleRate: Int, audioMetrics: AudioMetrics?) {
         switch verificationMode {
         case .textDependent:
             // Check if the template quality qheck is enabled in settings
-            if !isEnrollmentQualityCheckEnabled || self.checkEnrollmentQuality(data: data, sampleRate: sampleRate) == .ok {
+            if !isEnrollmentQualityCheckEnabled
+                || self.checkEnrollmentQuality(data: data, sampleRate: sampleRate) == .ok {
                 // Process voice data if enrollment quality is fine
                 handleTextDependentEnrollmentSession(data: data, sampleRate: sampleRate, audioMetrics: audioMetrics)
             }
         case .textIndependent:
             do {
-                try ExceptionTranslator.catchException {
-                    self.template = self.voiceTemplateFactory!.createVoiceTemplate(data, sampleRate: sampleRate)
-                }
+                self.template = try self.voiceTemplateFactory!.createVoiceTemplate(data, sampleRate: sampleRate)
             } catch {
                 print(error.localizedDescription)
                 // Present error and reset view controller state in case enrollment failure
-                self.presentAlert(title: "Error", message: "Something went wrong. Could not create voice template. Please try again.", buttonTitle: "Okay", completion: { [weak self] _ in self?.resetControllerState() })
+                self.presentAlert(
+                    title: "Error",
+                    message: "Something went wrong. Could not create voice template. Please try again.",
+                    buttonTitle: "Okay",
+                    completion: { [weak self] _ in self?.resetControllerState() }
+                )
                 return
             }
             DispatchQueue.main.async {
@@ -147,16 +151,18 @@ class EnrollmentViewController: UIViewController {
         }
     }
     
-    
     fileprivate func handleTextDependentEnrollmentSession(data: Data, sampleRate: Int, audioMetrics: AudioMetrics?) {
         var voiceTemplate: VoiceTemplate?
         do {
-            try ExceptionTranslator.catchException({
-                // Create voice template after each attempt and appending it to an array of voice tamplates
-                voiceTemplate = self.voiceTemplateFactory!.createVoiceTemplate(data, sampleRate: sampleRate)
-            })
+            // Create voice template after each attempt and appending it to an array of voice tamplates
+            voiceTemplate = try self.voiceTemplateFactory!.createVoiceTemplate(data, sampleRate: sampleRate)
         } catch {
-            self.presentAlert(title: "Error", message: "Could not create voice template, please try again", buttonTitle: "Ok", completion: nil)
+            self.presentAlert(
+                title: "Error",
+                message: "Could not create voice template, please try again",
+                buttonTitle: "Ok",
+                completion: nil
+            )
             print(error.localizedDescription)
             return
         }
@@ -174,15 +180,18 @@ class EnrollmentViewController: UIViewController {
         case 1...self.enrollCount - 1:
             if let voiceTemplate = voiceTemplate {
                 // Check if the template quality qheck is enabled in settings
-                if !isEnrollmentQualityCheckEnabled || checkTemplateMatchingAgainstReferenceTemplate(voiceTemplate: voiceTemplate) {
-                    appendVoiceTemplateAndCompleteTextDependentEnrollmentIfNeeded(voiceTemplate: voiceTemplate, audioMetrics: audioMetrics)
+                if !isEnrollmentQualityCheckEnabled
+                    || checkTemplateMatchingAgainstReferenceTemplate(voiceTemplate: voiceTemplate) {
+                    appendVoiceTemplateAndCompleteTextDependentEnrollmentIfNeeded(
+                        voiceTemplate: voiceTemplate,
+                        audioMetrics: audioMetrics
+                    )
                 }
             }
         default:
             break
         }
     }
-    
     
     fileprivate func appendVoiceTemplateAndCompleteTextDependentEnrollmentIfNeeded(voiceTemplate: VoiceTemplate, audioMetrics: AudioMetrics?) {
         // Apend the template if it passes the check
@@ -207,16 +216,20 @@ class EnrollmentViewController: UIViewController {
         }
     }
     
-    
     private func checkEnrollmentQuality(data: Data, sampleRate: Int, audioMetrics: AudioMetrics? = nil) -> Quality {
         var qualityCheckResult: QualityCheckResult?
         guard voiceTemplateFactory != nil else { print("voiceTemplateFactory is nil"); return Quality.undetermined }
         
+        // Set custom thresholds for checkQuality function if needed
+        let thresholds = QualityCheckThresholds()
+        // Minimum speech length (Ms)
+        thresholds.minimumSpeechLengthMs = Globals.minSpeechLengthMs
+        // Minimim Signal-to-noise ratio (dB)
+        thresholds.minimumSnrDb = 10
+        
         do {
-            try ExceptionTranslator.catchException({
-                // Get enrollment audio quality result
-                qualityCheckResult = self.voiceTemplateFactory?.checkQuality(data, sampleRate: sampleRate)
-            })
+            // Get enrollment audio quality result
+            qualityCheckResult = try self.voiceTemplateFactory?.checkQuality(data, sampleRate: sampleRate, thresholds: thresholds)
         } catch {
             print(error.localizedDescription)
             return Quality.undetermined
@@ -226,17 +239,21 @@ class EnrollmentViewController: UIViewController {
             switch qualityCheckResult.qualityShortDescription {
             case .OK:
                 return Quality.ok
-            case .TOO_LONG_REVERBERATION:
-                print("QUALITY: TOO LONG REVERBERATION")
-                self.presentAlert(title: "Quality Issue", message: "Too long reverberation. Please try to record in a smaller room.", buttonTitle: "Okay")
-                return Quality.tooLongReverberation
             case .TOO_NOISY:
                 print("QUALITY: TOO NOISY")
-                self.presentAlert(title: "Quality Issue", message: "Too noisy. Please record again in a quiter enviroment.", buttonTitle: "Okay")
+                self.presentAlert(
+                    title: "Quality Issue",
+                    message: "Too noisy. Please record again in a quiter enviroment.",
+                    buttonTitle: "Okay"
+                )
                 return Quality.tooNoisy
             case .TOO_SMALL_SPEECH_TOTAL_LENGTH:
                 print("QUALITY: NOT ENOUGH SPEECH")
-                self.presentAlert(title: "Quality Issue", message: "Not enough speech. Please record again.", buttonTitle: "Okay")
+                self.presentAlert(
+                    title: "Quality Issue",
+                    message: "Not enough speech. Please record again.",
+                    buttonTitle: "Okay"
+                )
                 return Quality.tooSmallSpeechTotalLength
             default:
                 return Quality.undetermined
@@ -245,30 +262,43 @@ class EnrollmentViewController: UIViewController {
         return Quality.undetermined
     }
     
-    
     fileprivate func checkTemplateMatchingAgainstReferenceTemplate(voiceTemplate: VoiceTemplate) -> Bool {
         var matchingResult: VerifyResult?
         guard let referenceTemplate = referenceTemplate else {
             return false
         }
         do {
-            try ExceptionTranslator.catchException({
-                matchingResult = self.voiceTemplateMatcher?.matchVoiceTemplates(referenceTemplate, template2: voiceTemplate)
-            })
+            matchingResult = try self.voiceTemplateMatcher?.matchVoiceTemplates(
+                referenceTemplate,
+                template2: voiceTemplate
+            )
         } catch {
             print("Could not determine verification result for templates.")
             print(error.localizedDescription)
+            self.presentAlert(
+                title: "Error",
+                message: error.localizedDescription,
+                buttonTitle: "Ok",
+                completion: nil
+            )
             return false
         }
         print("Templates Matching Score: \(matchingResult!.score)")
         if matchingResult!.score > Globals.enrollmentTemplatesMatchingThreshold {
             return true
         } else {
-            self.presentAlert(title: "Templates does not match", message: "\nThis recording does not match the first one. Please make sure the speaker and the phrase are the same in every attempt.", buttonTitle: "Ok", completion: nil)
+            self.presentAlert(
+                title: "Templates do not match",
+                message: """
+                This recording does not match the first one.
+                Please make sure the speaker and the phrase are the same in every attempt.
+                """,
+                buttonTitle: "Ok",
+                completion: nil
+            )
             return false
         }
     }
-    
     
     fileprivate func resetControllerState() {
         DispatchQueue.main.async {
@@ -280,7 +310,6 @@ class EnrollmentViewController: UIViewController {
         templates = []
         referenceTemplate = nil
     }
-    
     
     @IBAction func transitToRecording(_ sender: UIButton) {
         // Checking Microphone permission
@@ -296,7 +325,7 @@ class EnrollmentViewController: UIViewController {
                     }
                 }
             }
-        } else if AVAudioSession.sharedInstance().recordPermission == .denied{
+        } else if AVAudioSession.sharedInstance().recordPermission == .denied {
             DispatchQueue.main.async {
                 self.showMicrophoneAccessAlert()
             }
@@ -307,30 +336,35 @@ class EnrollmentViewController: UIViewController {
         }
     }
     
-    
     @objc fileprivate func transitToMainScreen() {
         navigationController?.popToRootViewController(animated: true)
     }
     
-    
     fileprivate func saveVoiceEnrollmentTemplate() {
-        switch verificationMode {
-            // For Text Dependent Mode
-        case .textDependent:
-            // Merge Templates
-            let mergedTemplate = voiceTemplateFactory?.mergeVoiceTemplates(templates)
-            // Save user template
-            if let mergedTemplate = mergedTemplate {
-                UserDefaults.standard.set(mergedTemplate.serialize(), forKey: Globals.textDependentVoiceTemplateKey)
+        do {
+            switch verificationMode {
+                // For Text Dependent Mode
+            case .textDependent:
+                // Merge Templates
+                let mergedTemplate = try voiceTemplateFactory?.mergeVoiceTemplates(templates)
+                // Save user template
+                if let mergedTemplate = mergedTemplate {
+                    UserDefaults.standard.set(
+                        try mergedTemplate.serialize(),
+                        forKey: Globals.textDependentVoiceTemplateKey
+                    )
+                }
+                // For Text Independent Mode
+            case .textIndependent:
+                // Save user template
+                if let template = template {
+                    UserDefaults.standard.set(try template.serialize(), forKey: Globals.textIndependentVoiceTemplateKey)
+                }
+            default:
+                break
             }
-            // For Text Independent Mode
-        case .textIndependent:
-            // Save user template
-            if let template = template {
-                UserDefaults.standard.set(template.serialize(), forKey: Globals.textIndependentVoiceTemplateKey)
-            }
-        default:
-            break
+        } catch {
+            print(error.localizedDescription)
         }
     }
 }
@@ -339,7 +373,6 @@ extension EnrollmentViewController: RecordingViewControllerDelegate {
     func onRecordStop(data: Data, sampleRate: Int, audioMetrics: AudioMetrics?) {
         self.stopRecording(data: data, sampleRate: sampleRate, audioMetrics: audioMetrics)
     }
-    
     
     func onError(errorText: String) {
         self.presentAlert(title: "Error", message: errorText, buttonTitle: "Okay")

@@ -7,7 +7,6 @@
 import UIKit
 import AVFoundation
 
-
 protocol RecordingViewControllerDelegate: AnyObject {
     func onRecordStop(data: Data, sampleRate: Int, audioMetrics: AudioMetrics?)
     func onError(errorText: String)
@@ -34,8 +33,9 @@ class RecordingViewController: UIViewController {
     
     var verificationMode: VerificationMode?
     var mode: Mode?
-    var minSpeechLengthMs: Float = 500 // Default minimum amout of speech in recording in milliseconds. This parameters vary depending on used mode (Text Dependent, Text Independent) and scenario (enrollment, verification).
-
+    // Default minimum amout of speech in recording in milliseconds.
+    // This parameters vary depending on used mode (Text Dependent, Text Independent) and scenario (enrollment, verification).
+    var minSpeechLengthMs: Float = Globals.minSpeechLengthMs
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -48,26 +48,22 @@ class RecordingViewController: UIViewController {
         }
     }
     
-    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         micImage.blink()
     }
-    
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         audioRecorder?.startRecording()
     }
     
-    
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         stopRecorder()
     }
     
-    
-    fileprivate func configureUI(){
+    fileprivate func configureUI() {
         view.setBackgroundColor()
         micImage.tintColor = .redColor
         metricAmountLabel.textColor = .accentColor
@@ -77,7 +73,6 @@ class RecordingViewController: UIViewController {
             cancelButton?.layer.cornerCurve = CALayerCornerCurve.continuous
         }
     }
-    
     
     fileprivate func setInstructionText() {
         switch (verificationMode, mode) {
@@ -102,19 +97,20 @@ class RecordingViewController: UIViewController {
         }
     }
     
-    
     fileprivate func setupBackgroundStateObserver() {
         // Listen if app did enter background mode and stop the recorder
-        NotificationCenter.default.addObserver(self, selector: #selector(stopRecorder), name:UIApplication.didEnterBackgroundNotification, object: nil)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(stopRecorder),
+            name: UIApplication.didEnterBackgroundNotification,
+            object: nil
+        )
     }
-    
     
     @objc fileprivate func stopRecorder() {
         audioRecorder?.status = .aborted
         audioRecorder?.stopRecording(audioMetrics: nil)
-        dismiss(animated: true, completion: nil)
     }
-    
     
     @IBAction func cancelButtonPressed(_ sender: UIButton) {
         dismiss(animated: true, completion: nil)
@@ -122,13 +118,11 @@ class RecordingViewController: UIViewController {
     
 }
 
-
 extension RecordingViewController: AudioRecorderDelegate {
     private func passVoiceData(data: Data, sampleRate: Int, audioMetrics: AudioMetrics?, actionClosure: @escaping () -> Void) {
         self.delegate?.onRecordStop(data: data, sampleRate: sampleRate, audioMetrics: audioMetrics)
         actionClosure()
     }
-    
     
     func onAnalyzing() {
         DispatchQueue.main.async {
@@ -140,17 +134,15 @@ extension RecordingViewController: AudioRecorderDelegate {
         }
     }
     
-    
-    func onContinuousVerificationScoreAvailable(verificationScore: Float, backgroundLengthMs: Float) {
+    func onContinuousVerificationProbabilityAvailable(verificationProbability: Float, backgroundLengthMs: Float) {
         if backgroundLengthMs != 0 && backgroundLengthMs > 2000 {
             metricAmountLabel.text = "No Speech"
             metricAmountLabel.alpha = 0.3
         } else {
-            metricAmountLabel.text = "\(Int(verificationScore))%"
+            metricAmountLabel.text = "\(Int(verificationProbability))%"
             metricAmountLabel.alpha = 1
         }
     }
-    
     
     func onRecordStop(data: Data, sampleRate: Int, audioMetrics: AudioMetrics?) {
         passVoiceData(data: data, sampleRate: sampleRate, audioMetrics: audioMetrics) {
@@ -160,18 +152,15 @@ extension RecordingViewController: AudioRecorderDelegate {
         }
     }
     
-    
     func onError(errorText: String) {
         DispatchQueue.main.async {
             self.delegate?.onError(errorText: errorText)
         }
     }
     
-    
     func onSpeechLengthAvailable(speechLength: Double) {
         metricAmountLabel.text = String(format: "%.1f s", speechLength / 1000)
     }
-    
     
     func onLongSilence() {
         dismiss(animated: true, completion: nil)

@@ -25,9 +25,11 @@ extension UIViewController {
         }
     }
     
-    
     func showMicrophoneAccessAlert() {
-        let alertController = UIAlertController (title: "Unable to record", message: "We need your permission to record audio. Please grant access to the microphone in Settings.", preferredStyle: .alert)
+        let alertController = UIAlertController(
+            title: "Unable to record",
+            message: "We need your permission to record audio. Please grant access to the microphone in Settings.",
+            preferredStyle: .alert)
         
         let settingsAction = UIAlertAction(title: "Settings", style: .default) { (_) -> Void in
             
@@ -49,12 +51,21 @@ extension UIViewController {
     }
 }
 
-extension UIView{
-     func blink() {
-         self.alpha = 0.2
-         UIView.animate(withDuration: 1, delay: 0.0, options: [.curveLinear, .repeat, .autoreverse], animations: {self.alpha = 1.0}, completion: nil)
-     }
-    
+extension UIView {
+    func blink() {
+        self.alpha = 0.2
+        UIView.animate(
+            withDuration: 1,
+            delay: 0.0,
+            options: [
+                .curveLinear,
+                .repeat,
+                .autoreverse
+            ],
+            animations: {self.alpha = 1.0},
+            completion: nil
+        )
+    }
     
     func setBackgroundColor() {
         if #available(iOS 13.0, *) {

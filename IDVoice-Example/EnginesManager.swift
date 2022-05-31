@@ -5,6 +5,7 @@
 //
 
 import Foundation
+import VoiceSdk
 
 enum VerificationMode {
     case textDependent
@@ -27,25 +28,27 @@ class VoiceEngineManager {
     private var speechSummaryEngine: SpeechSummaryEngine!
     private var snrComputer: SNRComputer!
     
-    
     func getSpeechSummaryEngine() -> SpeechSummaryEngine {
         if speechSummaryEngine == nil {
-            speechSummaryEngine = SpeechSummaryEngine.init(path: Globals.speechSummaryInitDataPath)
+            speechSummaryEngine = try? SpeechSummaryEngine.init(path: Globals.speechSummaryInitDataPath)
         }
         return speechSummaryEngine
     }
-    
     
     func getVoiceTemplateFactory(for voiceTemplateType: VerificationMode) -> VoiceTemplateFactory? {
         switch voiceTemplateType {
         case .textDependent:
             if textDependentVoiceTemplateFactory == nil {
-                textDependentVoiceTemplateFactory = VoiceTemplateFactory(path: Globals.voiceTemplateFactoryAndMatcherTDInitDataPath)
+                textDependentVoiceTemplateFactory = try? VoiceTemplateFactory(
+                    path: Globals.voiceTemplateFactoryAndMatcherTDInitDataPath
+                )
                 return textDependentVoiceTemplateFactory
             }
         case .textIndependent:
             if textIndependentVoiceTemplateFactory == nil {
-                textIndependentVoiceTemplateFactory = VoiceTemplateFactory(path: Globals.voiceTemplateFactoryAndMatcherTIInitDataPath)
+                textIndependentVoiceTemplateFactory = try? VoiceTemplateFactory(
+                    path: Globals.voiceTemplateFactoryAndMatcherTIInitDataPath
+                )
                 return textIndependentVoiceTemplateFactory
             }
         default:
@@ -54,17 +57,20 @@ class VoiceEngineManager {
         return nil
     }
     
-    
     func getVoiceTemplateMatcher(for voiceTemplateType: VerificationMode) -> VoiceTemplateMatcher? {
         switch voiceTemplateType {
         case .textDependent:
             if textDependentVoiceTemplateMatcher == nil {
-                textDependentVoiceTemplateMatcher = VoiceTemplateMatcher(path: Globals.voiceTemplateFactoryAndMatcherTDInitDataPath)
+                textDependentVoiceTemplateMatcher = try? VoiceTemplateMatcher(
+                    path: Globals.voiceTemplateFactoryAndMatcherTDInitDataPath
+                )
                 return textDependentVoiceTemplateMatcher
             }
         case .textIndependent:
             if textIndependentVoiceTemplateMatcher == nil {
-                textIndependentVoiceTemplateMatcher = VoiceTemplateMatcher(path: Globals.voiceTemplateFactoryAndMatcherTIInitDataPath)
+                textIndependentVoiceTemplateMatcher = try? VoiceTemplateMatcher(
+                    path: Globals.voiceTemplateFactoryAndMatcherTIInitDataPath
+                )
                 return textIndependentVoiceTemplateMatcher
             }
         default:
@@ -73,14 +79,12 @@ class VoiceEngineManager {
         return nil
     }
     
-    
     func getAntiSpoofingEngine() -> AntispoofEngine {
         if antispoofEngine == nil {
-            antispoofEngine = AntispoofEngine(path: Globals.antispoofInitDataPath)
+            antispoofEngine = try? AntispoofEngine(path: Globals.antispoofInitDataPath)
         }
         return antispoofEngine
     }
-    
     
     func deinitAntiSpoofingEngine() {
         if antispoofEngine != nil {
@@ -88,10 +92,9 @@ class VoiceEngineManager {
         }
     }
     
-    
     func getSNRComputer() -> SNRComputer {
         if snrComputer == nil {
-            snrComputer = SNRComputer(path: Globals.speechSummaryInitDataPath)
+            snrComputer = try? SNRComputer(path: Globals.speechSummaryInitDataPath)
         }
         return snrComputer
     }

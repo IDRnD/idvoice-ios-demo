@@ -17,7 +17,6 @@ class SettingsViewController: UIViewController {
     @IBOutlet weak var livenessThresholdLabel: UILabel!
     @IBOutlet weak var resetEnrollmentsButton: UIButton!
     
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
@@ -26,11 +25,9 @@ class SettingsViewController: UIViewController {
         initSettingsSwitches()
     }
     
-    
     override func viewWillAppear(_ animated: Bool) {
         configureResetButton()
     }
-    
     
     fileprivate func configureUI() {
         view.setBackgroundColor()
@@ -47,9 +44,9 @@ class SettingsViewController: UIViewController {
         }
     }
     
-    
     fileprivate func configureResetButton() {
-        if UserDefaults.standard.data(forKey: Globals.textDependentVoiceTemplateKey) != nil || UserDefaults.standard.data(forKey: Globals.textIndependentVoiceTemplateKey) != nil {
+        if UserDefaults.standard.data(forKey: Globals.textDependentVoiceTemplateKey) != nil
+            || UserDefaults.standard.data(forKey: Globals.textIndependentVoiceTemplateKey) != nil {
             resetEnrollmentsButton.isEnabled = true
             resetEnrollmentsButton.backgroundColor = .redColor
         } else {
@@ -57,7 +54,6 @@ class SettingsViewController: UIViewController {
             resetEnrollmentsButton.backgroundColor = .systemGray
         }
     }
-    
     
     fileprivate func initThresholds() {
         let verificationThreshold = UserDefaults.standard.value(forKey: Globals.verificationThresholdKey) as? Float
@@ -70,24 +66,22 @@ class SettingsViewController: UIViewController {
         self.livenessThresholdSlider.value = antispoofingThreshold ?? 0.5
     }
     
-    
     fileprivate func initSettingsSwitches() {
         self.livenessCheckSwitch.isOn = UserDefaults.standard.bool(forKey: Globals.isLivenessCheckEnabled)
-        self.enrollmentQualityCheckSwitch.isOn = UserDefaults.standard.bool(forKey: Globals.isEnrollmentQualityCheckEnabled)
+        self.enrollmentQualityCheckSwitch.isOn = UserDefaults.standard.bool(
+            forKey: Globals.isEnrollmentQualityCheckEnabled
+        )
     }
-    
     
     fileprivate func thresholdToString(_ threshold: Float) -> String {
         return String(Int(threshold * 100)) + "%"
     }
-    
     
     @IBAction func verificationSliderValueChanged(_ sender: UISlider) {
         self.verificationThresholdLabel.text = thresholdToString(sender.value)
         let threshold = round(100 * self.verificationThresholdSlider.value) / 100
         UserDefaults.standard.set(threshold, forKey: Globals.verificationThresholdKey)
     }
-    
     
     @IBAction func livenessCheckSwitchChanged(_ sender: UISwitch) {
         let currentSetting = sender.isOn
@@ -106,19 +100,16 @@ class SettingsViewController: UIViewController {
         }
     }
     
-    
     @IBAction func enrollmentQualityCheckSwitchChanged(_ sender: UISwitch) {
         let currentSetting = sender.isOn
         UserDefaults.standard.set(currentSetting, forKey: Globals.isEnrollmentQualityCheckEnabled)
     }
-    
     
     @IBAction func livenessSliderValueChanged(_ sender: UISlider) {
         self.livenessThresholdLabel.text = thresholdToString(sender.value)
         let threshold = round(100 * self.livenessThresholdSlider.value) / 100
         UserDefaults.standard.set(threshold, forKey: Globals.livenessThresholdkey)
     }
-    
     
     @IBAction func onResetEnrollmentsTap(_ sender: UIButton) {
         let alert = UIAlertController(title: "Are you sure?", message: nil, preferredStyle: .actionSheet)
