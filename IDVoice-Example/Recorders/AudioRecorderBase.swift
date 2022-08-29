@@ -74,6 +74,17 @@ class AudioRecorderBase {
         print("Expected sample rate: \(self.sampleRate), Current sample rate: \(self.engine.inputNode.inputFormat(forBus: 0).sampleRate)")
         print("Microphone gain: \(AVAudioSession.sharedInstance().inputGain)")
         print("\n")
+        
+        // Check that hardware samplerate was determined correctly
+        guard self.sampleRate == Int(self.engine.inputNode.inputFormat(forBus: 0).sampleRate) else {
+            delegate?.onError(
+                errorText: """
+                    Expected sample rate does not match the hardware sample rate.
+                    """
+            )
+            return
+        }
+        
         // Initialize a newly allocated audio format instance depending on device hardware
         let inputFormat = AVAudioFormat(
             commonFormat: .pcmFormatInt16,

@@ -155,6 +155,7 @@ extension RecordingViewController: AudioRecorderDelegate {
     func onError(errorText: String) {
         DispatchQueue.main.async {
             self.delegate?.onError(errorText: errorText)
+            self.dismiss(animated: true, completion: nil)
         }
     }
     
@@ -167,3 +168,4 @@ extension RecordingViewController: AudioRecorderDelegate {
     }
     
 }
+
