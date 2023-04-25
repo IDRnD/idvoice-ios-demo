@@ -1,13 +1,15 @@
 //
 //  Globals.swift
 //  IDVoice-Example
-//  Copyright © 2020 ID R&D. All rights reserved.
+//  Copyright © 2023 ID R&D. All rights reserved.
 //
 
 import UIKit
 import VoiceSdk
 
 struct Globals {
+    // Sample rate
+    static var sampleRate = 44100
     
     // Voice Engines
     static var textDependentVoiceTemplateFactory: VoiceTemplateFactory?
@@ -17,8 +19,6 @@ struct Globals {
     static var textIndependentVoiceTemplateMatcher: VoiceTemplateMatcher?
     
     static var speechSummaryEngine: SpeechSummaryEngine?
-    static var antiSpoofingEngine: AntispoofEngine?
-    static var snrComputer: SNRComputer?
     
     // Directories for audio files saving
     struct Directory {
@@ -42,13 +42,15 @@ struct Globals {
     // Speech analysis parameters
     static let minSpeechLengthMs: Float = 500
     static let minSpeechLengthMsTextDependentEnroll: Float = 500
-    static let minSpeechLengthMsTextIndependentEnroll: Float = 10000
+    static let minSpeechLengthMsTextIndependentEnroll: Float = 12000
     static let minSpeechLengthMsForTextIndependentVerify: Float = 500
     static let minSpeechLengthMsForTextDependentVerify: Float = 500
     static let maxSilenceLengthMs: Float = 300
+    static var minSpeechLengthMsForAudioChunk: Float = 3000
     
     // Parameters for enrollment recordings quality check
     static let enrollmentTemplatesMatchingThreshold: Float = 0.5
+    static let snrThresholdForEnrollmentDb: Float = 20
     
     // FileManager Directory URL
     static let documentDirectoryUrl = try! FileManager.default.url(
@@ -62,7 +64,8 @@ struct Globals {
     static let voiceTemplateFactoryAndMatcherTDInitDataPath = Bundle.main.resourcePath! + "/verify/mic-v1/"
     static let voiceTemplateFactoryAndMatcherTIInitDataPath = Bundle.main.resourcePath! + "/verify/mic-v1/"
     static let speechSummaryInitDataPath = Bundle.main.resourcePath! + "/media/speech_summary/"
-    static let antispoofInitDataPath = Bundle.main.resourcePath! + "/antispoof2/"
+    static let livenessInitDataPath = Bundle.main.resourcePath! + "/liveness/"
+    static let snrComputerInitDataPath = Bundle.main.resourcePath! + "/media/snr_computer/"
     
     // Instruction Strings
     static let textDependentEnrollmentInstruction = """
@@ -95,4 +98,23 @@ struct Globals {
     static let textIndependentEnrollmentRecorderInstuction = "Please provide at least \(Int(minSpeechLengthMsTextIndependentEnroll / 1000)) seconds of speech."
     static let textIndependentVerificationRecorderInstuction = "Please say anything you want"
     static let continuousVerificationRecorderInstuction = "Listening for a stream of speech..."
+    
+    static let acceptedRecordingsMessages = [
+        "Awesome!",
+        "Great! Keep it going!",
+        "That's some quality speech!",
+        "You are doing just fine!",
+        "Great job! Go ahead."
+    ]
+        
+    static let rejectedRecordingsMessages = [
+        "Please hold the phone closer.",
+        "Try moving further from any noise.",
+        "Can you move away from any noise?",
+        "Move away from noise if possible.",
+        "Please speak directly into the mic.",
+        "Try speaking directly into the mic.",
+        "Speak clearly directly into the mic.",
+        "Be sure to speak loudly and clearly."
+    ]
 }

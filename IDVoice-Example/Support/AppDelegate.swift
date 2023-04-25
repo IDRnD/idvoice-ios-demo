@@ -1,7 +1,7 @@
 //
 //  AppDelegate.swift
 //  IDVoice-Example
-//  Copyright © 2020 ID R&D. All rights reserved.
+//  Copyright © 2023 ID R&D. All rights reserved.
 //
 
 import UIKit
@@ -60,7 +60,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         VoiceEngineManager.shared.getVoiceTemplateMatcher(for: .textIndependent)
         
         Globals.speechSummaryEngine = VoiceEngineManager.shared.getSpeechSummaryEngine()
-        Globals.snrComputer = VoiceEngineManager.shared.getSNRComputer()
         // Liveness Engine is memory intensive so it's initialising only if Liveness Check is enabled when the result screen is about to appear and deinitialised right after.
     }
 }

@@ -1,7 +1,7 @@
 //
 //  ResultViewController.swift
 //  IDVoice-Example
-//  Copyright © 2020 ID R&D. All rights reserved.
+//  Copyright © 2023 ID R&D. All rights reserved.
 //
 
 import UIKit
@@ -75,5 +75,10 @@ class ResultViewController: UIViewController {
     
     @IBAction func onCloseButtonTap(_ sender: UIButton) {
         navigationController?.popToRootViewController(animated: true)
+    }
+    
+    // MARK: - Deinit
+    deinit {
+        print(Info.objectDeinitInfo(self))
     }
 }

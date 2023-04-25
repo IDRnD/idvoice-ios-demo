@@ -1,7 +1,7 @@
 //
 //  EnrollmentViewController.swift
 //  IDVoice-Example
-//  Copyright © 2020 ID R&D. All rights reserved.
+//  Copyright © 2023 ID R&D. All rights reserved.
 //
 
 import UIKit
@@ -84,6 +84,10 @@ class EnrollmentViewController: UIViewController {
             recordButton?.layer.cornerCurve = CALayerCornerCurve.continuous
         }
         
+        if #available(iOS 11.0, *) {
+            navigationController?.navigationBar.prefersLargeTitles = true
+        }
+        
         if verificationMode == .textIndependent {
             checkStackView.isHidden = true
         } else {
@@ -105,10 +109,10 @@ class EnrollmentViewController: UIViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "showRecordingView" {
             let vc = segue.destination as! RecordingViewController
-            vc.verificationMode = verificationMode
+            vc.recordingMode = .enrollment
+            vc.verificationMode = self.verificationMode
             vc.minSpeechLengthMs = self.minSpeechLengthMs
             vc.delegate = self
-            vc.mode = .Enrollment
         }
     }
     
@@ -366,6 +370,11 @@ class EnrollmentViewController: UIViewController {
         } catch {
             print(error.localizedDescription)
         }
+    }
+    
+    // MARK: - Deinit
+    deinit {
+        print(Info.objectDeinitInfo(self))
     }
 }
 

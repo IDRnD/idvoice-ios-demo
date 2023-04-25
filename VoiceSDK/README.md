@@ -2,7 +2,7 @@ Please copy libs/VoiceSdk.framework and the contents of init_data folder from th
 
 Contents of this folder by default should be the following:
 
-- `antispoof2/` folder (copy from `init_data/` folder in SDK package)
+- `liveness/` folder (copy from `init_data/` folder in SDK package)
 - `media/` folder (copy from `init_data/` folder in SDK package)
 - `verify/` folder (copy from `init_data/` folder in SDK package)
 - `VoiceSdk.framework` (copy from `libs/` folder in SDK package)

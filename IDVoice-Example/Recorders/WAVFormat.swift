@@ -3,7 +3,7 @@
 //  IDVoice-Example
 //
 //  Created by Renald Shchetinin on 11.02.2021.
-//  Copyright © 2021 ID R&D. All rights reserved.
+//  Copyright © 2023 ID R&D. All rights reserved.
 //
 
 import Foundation

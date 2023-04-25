@@ -1,7 +1,7 @@
 //
 //  EnginesManager.swift
 //  IDVoice-Example
-//  Copyright © 2020 ID R&D. All rights reserved.
+//  Copyright © 2023 ID R&D. All rights reserved.
 //
 
 import Foundation
@@ -24,7 +24,7 @@ class VoiceEngineManager {
     private var textDependentVoiceTemplateMatcher: VoiceTemplateMatcher?
     private var textIndependentVoiceTemplateMatcher: VoiceTemplateMatcher?
     
-    private var antispoofEngine: AntispoofEngine!
+    private var livenessEngine: LivenessEngine!
     private var speechSummaryEngine: SpeechSummaryEngine!
     private var snrComputer: SNRComputer!
     
@@ -79,16 +79,16 @@ class VoiceEngineManager {
         return nil
     }
     
-    func getAntiSpoofingEngine() -> AntispoofEngine {
-        if antispoofEngine == nil {
-            antispoofEngine = try? AntispoofEngine(path: Globals.antispoofInitDataPath)
+    func getAntiSpoofingEngine() -> LivenessEngine {
+        if livenessEngine == nil {
+            livenessEngine = try? LivenessEngine(path: Globals.livenessInitDataPath)
         }
-        return antispoofEngine
+        return livenessEngine
     }
     
     func deinitAntiSpoofingEngine() {
-        if antispoofEngine != nil {
-            antispoofEngine = nil
+        if livenessEngine != nil {
+            livenessEngine = nil
         }
     }
     

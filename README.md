@@ -1,7 +1,7 @@
 iOS IDVoice sample application overview
 ===========================================
 
-**The application code is compatible with VoiceSDK 3.6.0. See tag '3.2.4.' for VoiceSDK 3.2.4 support and tag '2.14' for VoiceSDK 2.13 and 2.14 support**
+**The application code is compatible with VoiceSDK 3.10.0. See tag '3.6.0.' for VoiceSDK 3.6.0 support and tag '2.14' for VoiceSDK 2.13 and 2.14 support**
 
 This sample application is intended to demonstrate the VoiceSDK voice verification 
 and anti-spoofing capabilities:
@@ -32,6 +32,5 @@ Developer tips
 - See `EnginesManager.swift`  and `AppDelegate.swift` for verification and speech summary engines initialization code
 - See `AudioRecorderBase.swift` for voice recording and buffering
 - See `AudioRecorder.swift` for voice processing with speech analysis
-- See `EnrollmentVC.swift` for voice template creation code and singal-to-noise ratio (SNR) computation code
-- See `VerificationVC.swift` for voice templates matching code
-
+- See `EnrollmentViewController.swift` for voice template creation code and singal-to-noise ratio (SNR) computation code
+- See `VerificationViewController.swift` for voice templates matching code

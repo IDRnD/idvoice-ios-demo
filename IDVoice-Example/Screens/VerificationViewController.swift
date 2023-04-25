@@ -1,7 +1,7 @@
 //
 //  VerificationViewController.swift
 //  IDVoice-Example
-//  Copyright © 2020 ID R&D. All rights reserved.
+//  Copyright © 2023 ID R&D. All rights reserved.
 //
 
 import UIKit
@@ -16,7 +16,7 @@ class VerificationViewController: UIViewController {
     private var voiceTemplateFactory: VoiceTemplateFactory?
     private var voiceTemplateMatcher: VoiceTemplateMatcher?
     
-    private var livenessEngine: AntispoofEngine?
+    private var livenessEngine: LivenessEngine?
     var verificationMode: VerificationMode?
     
     private var verificationProbability: Float = 0
@@ -63,7 +63,6 @@ class VerificationViewController: UIViewController {
             instructionsLabel.text = Globals.textIndependentVerificationInstruction
         case .continuous:
             instructionsLabel.text = Globals.textIndependentContinuousVerificationInstruction
-            self.title = "Continuous Verification"
         default:
             break
         }
@@ -78,14 +77,25 @@ class VerificationViewController: UIViewController {
         if #available(iOS 13.0, *) {
             recordButton?.layer.cornerCurve = CALayerCornerCurve.continuous
         }
+        
+        if verificationMode == .continuous {
+            navigationItem.title = "Continuous Verification"
+            if #available(iOS 11.0, *) {
+                navigationController?.navigationBar.prefersLargeTitles = false
+            }
+        } else {
+            if #available(iOS 11.0, *) {
+                navigationController?.navigationBar.prefersLargeTitles = true
+            }
+        }
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "showRecordingView" {
             let vc = segue.destination as! RecordingViewController
-            vc.verificationMode = verificationMode
-            vc.mode = .Verification
-            vc.minSpeechLengthMs = minSpeechLengthMs
+            vc.recordingMode = .verification
+            vc.verificationMode = self.verificationMode
+            vc.minSpeechLengthMs = self.minSpeechLengthMs
             vc.delegate = self
         } else if segue.identifier == "showResultsView" {
             let view = segue.destination as! ResultViewController
@@ -128,7 +138,8 @@ class VerificationViewController: UIViewController {
         if livenessCheckEnabled {
             // 1) Perform anti-spoofing check
             do {
-                self.livenessScore = try self.livenessEngine?.isSpoof(data, sampleRate: Int32(sampleRate)).score ?? 0
+                self.livenessScore = try self.livenessEngine?
+                    .checkLiveness(data, sampleRate: sampleRate).getValue().probability ?? 0
             } catch {
                 print(error.localizedDescription)
                 self.presentAlert(title: "Error", message: error.localizedDescription, buttonTitle: "Okay")
@@ -170,7 +181,9 @@ class VerificationViewController: UIViewController {
         }
     }
     
+    // MARK: - Deinit
     deinit {
+        print(Info.objectDeinitInfo(self))
         VoiceEngineManager.shared.deinitAntiSpoofingEngine()
     }
 }

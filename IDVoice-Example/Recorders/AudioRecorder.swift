@@ -1,7 +1,7 @@
 //
 //  AudioRecorder.swift
 //  IDVoice-Example
-//  Copyright © 2021 ID R&D. All rights reserved.
+//  Copyright © 2023 ID R&D. All rights reserved.
 //
 
 import AVFoundation
@@ -13,10 +13,13 @@ class AudioRecorder: AudioRecorderBase {
     private var speechSummaryStream: SpeechSummaryStream!
     private var speechEndPointDetector: SpeechEndpointDetector!
     private var verificationMode: VerificationMode?
-    private var snrComputer: SNRComputer!
+    private var recordingMode: RecordingMode!
+    private var snrComputer: SNRChecker!
     private var continuousVerificationStream: VoiceVerifyStream!
     private var voiceTemplateMatcher: VoiceTemplateMatcher!
     private var voiceTemplateFactory: VoiceTemplateFactory!
+    
+    var audioChunkProcessor: AudioChunkProcessor?
     
     private var minSpeechLengthMs: Float = 0
     private var maxSilenceLengthMs: Float = Globals.maxSilenceLengthMs
@@ -31,8 +34,9 @@ class AudioRecorder: AudioRecorderBase {
         super.init()
     }
     
-    convenience init(verificationMode: VerificationMode, minSpeechLength: Float) {
+    convenience init(recordingMode: RecordingMode, verificationMode: VerificationMode, minSpeechLength: Float) {
         self.init()
+        self.recordingMode = recordingMode
         self.verificationMode = verificationMode
         self.minSpeechLengthMs = minSpeechLength
         prepareVoiceEngines()
@@ -47,7 +51,7 @@ class AudioRecorder: AudioRecorderBase {
             speechSummaryStream = try speechSummaryEngine.createStream(Int32(sampleRate))
             
             // Set Signal-to-Noise ratio computer
-            snrComputer = Globals.snrComputer
+            snrComputer = SNRChecker.shared
             
             // Create Speech EndPoint Detector to detect the end of speech
             speechEndPointDetector = try SpeechEndpointDetector(
@@ -56,6 +60,13 @@ class AudioRecorder: AudioRecorderBase {
                 sampleRate: UInt32(sampleRate)
             )
             
+            // Initialise AudioChunkProcessor for text independent enrollment
+            self.audioChunkProcessor = AudioChunkProcessor(
+                sampleRate: sampleRate,
+                minSpeechLengthMs: minSpeechLengthMs,
+                speechLengthForChunk: Globals.minSpeechLengthMsForAudioChunk
+            )
+                        
             // Set parameters for Continuous Verification mode
             if verificationMode == .continuous {
                 // Disable speech length tracking in Continuous Verification mode
@@ -107,6 +118,9 @@ class AudioRecorder: AudioRecorderBase {
                 if self.useSpeechEndPointDetectorToDetectSpeechEnd {
                     try self.speechEndPointDetector.addSamples(buffer)
                 }
+                if self.verificationMode == .textIndependent && self.recordingMode == .enrollment {
+                    self.audioChunkProcessor?.process(buffer: buffer)
+                }
             } catch {
                 print(error.localizedDescription)
                 self.delegate?.onError(errorText: error.localizedDescription)
@@ -124,13 +138,12 @@ class AudioRecorder: AudioRecorderBase {
             // Invoke delegate method
             if delegate != nil && trackSpeechLength {
                 DispatchQueue.main.async {
-                    self.delegate?.onSpeechLengthAvailable(speechLength: Double(speechLengthMs))
+                    self.delegate?.onSpeechLengthAvailable(speechLength: speechLengthMs)
                 }
             }
             
-            // Compare speech length and silence length to determine if speech is already ended
-            if self.verificationMode != .continuous {
-                // Retrieve background length
+            switch (self.verificationMode, self.recordingMode) {
+            case (.textDependent, _ ), (.textIndependent, .verification) :
                 if let backgroundLengthMs = try self.speechSummaryStream?.getCurrentBackgroundLength() {
                     // Stop recording if no speech is present for 'silenceDurationForAutostop' amount of Ms
                     if backgroundLengthMs.floatValue > self.silenceDurationForAutostopMs {
@@ -149,9 +162,7 @@ class AudioRecorder: AudioRecorderBase {
                         }
                     }
                 }
-            }
-            // Continuous Verification logic
-            if self.verificationMode == .continuous {
+            case (.continuous, .verification):
                 // Append buffer data to continuous verification stream
                 try self.continuousVerificationStream?.addSamples(buffer)
                 while (try self.continuousVerificationStream?.hasVerifyResults().isTrue)! {
@@ -167,6 +178,8 @@ class AudioRecorder: AudioRecorderBase {
                         }
                     }
                 }
+            default:
+                break
             }
         } catch {
             print(error.localizedDescription)
@@ -179,14 +192,20 @@ class AudioRecorder: AudioRecorderBase {
         if
             let lastSpeechInfo = lastSpeechInfo,
             let data = data,
-            let snrDb = try? snrComputer.compute(data, sampleRate: Int32(sampleRate)).floatValue {
+            let snrDb = snrComputer.getSNR(forData: data) {
             
             let audioMetrics = AudioMetrics(
                 audioDurationMs: lastSpeechInfo.totalLengthMs,
                 speechDurationMs: lastSpeechInfo.speechLengthMs,
                 snrDb: snrDb
             )
-            self.stopRecording(audioMetrics: audioMetrics)
+            
+            let audioRecording = AudioRecording(
+                data: data,
+                sampleRate: sampleRate,
+                audioMetrics: audioMetrics
+            )
+            self.stopRecording(audioRecording: audioRecording)
         }
     }
 }

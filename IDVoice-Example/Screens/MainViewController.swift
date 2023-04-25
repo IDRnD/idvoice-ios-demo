@@ -1,7 +1,7 @@
 //
-//  ViewController.swift
+//  MainViewController.swift
 //  IDVoice-Example
-//  Copyright © 2020 ID R&D. All rights reserved.
+//  Copyright © 2023 ID R&D. All rights reserved.
 //
 
 import UIKit
@@ -20,6 +20,9 @@ class MainViewController: UIViewController {
         super.viewDidLoad()
         configureUI()
         disableButtonsIfNeeded()
+        if #available(iOS 11.0, *) {
+            navigationController?.navigationItem.largeTitleDisplayMode = .always
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {

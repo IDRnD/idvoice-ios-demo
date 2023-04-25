@@ -1,7 +1,7 @@
 //
 //  AudioRecorderBase.swift
 //  IDVoice-Example
-//  Copyright © 2021 ID R&D. All rights reserved.
+//  Copyright © 2023 ID R&D. All rights reserved.
 //
 
 import AVFoundation
@@ -13,16 +13,10 @@ enum Status {
     case longSilence
 }
 
-struct AudioMetrics {
-    var audioDurationMs: Float
-    var speechDurationMs: Float
-    var snrDb: Float
-}
-
 protocol AudioRecorderDelegate: AnyObject {
-    func onRecordStop(data: Data, sampleRate: Int, audioMetrics: AudioMetrics?)
+    func onRecordStop(audioRecording: AudioRecording?)
     func onError(errorText: String)
-    func onSpeechLengthAvailable(speechLength: Double)
+    func onSpeechLengthAvailable(speechLength: Float)
     func onNewData(buffer: Data)
     func onContinuousVerificationProbabilityAvailable(verificationProbability: Float, backgroundLengthMs: Float)
     func onLongSilence()
@@ -30,7 +24,7 @@ protocol AudioRecorderDelegate: AnyObject {
 }
 
 extension AudioRecorderDelegate {
-    func onSpeechLengthAvailable(speechLength: Double) {}
+    func onSpeechLengthAvailable(speechLength: Float) {}
     func onNewData(buffer: Data) {}
     func onContinuousVerificationScoreAvailable(verificationScore: Float) {}
     func onLongSilence() {}
@@ -54,11 +48,12 @@ class AudioRecorderBase {
     init() {
         // Determine device hardware sample rate
         sampleRate = Int(self.engine.inputNode.inputFormat(forBus: 0).sampleRate)
+        Globals.sampleRate = sampleRate
     }
     
     deinit {
         delegate = nil
-        print("Audio Recorder deinited in state: \(status)")
+        print(Info.objectDeinitInfo(self))
         stopRecording()
     }
     
@@ -69,11 +64,11 @@ class AudioRecorderBase {
     open func startRecording() {
         reset()
         data = Data()
-        print("\n")
+        
         print("Starting Audio Recorder...")
         print("Expected sample rate: \(self.sampleRate), Current sample rate: \(self.engine.inputNode.inputFormat(forBus: 0).sampleRate)")
         print("Microphone gain: \(AVAudioSession.sharedInstance().inputGain)")
-        print("\n")
+        
         
         // Check that hardware samplerate was determined correctly
         guard self.sampleRate == Int(self.engine.inputNode.inputFormat(forBus: 0).sampleRate) else {
@@ -102,11 +97,10 @@ class AudioRecorderBase {
         
         /*
          
-         !!! IMPORTANT !!!
-         Set the correct AVAudioSession category and mode. In this case these would be 'playAndRecord' category and 'measurement' mode.
+         Set AVAudioSession category and mode. In this case these would be 'playAndRecord' category and 'default' mode.
          
          - 'playAndRecord' category is used for recording (input) and playback (output) of audio
-         - 'measurement' mode is used to minimize the amount of system-supplied signal processing to input signal
+         - 'default' default audio session mode
          
          The audio session’s category and mode together define how your app uses audio.
          Typically, you set the category and mode before activating the session.
@@ -114,10 +108,7 @@ class AudioRecorderBase {
          */
         
         do {
-            try AVAudioSession.sharedInstance().setCategory(
-                AVAudioSession.Category.playAndRecord,
-                mode: AVAudioSession.Mode.measurement)
-            // 'measurment' mode is especially important for the correct work of VoiceSDK Anti-Spoofing check.
+            try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .default)
             try AVAudioSession.sharedInstance().setActive(true)
             self.engine.inputNode.installTap(onBus: 0, bufferSize: 4096, format: inputFormat, block: bufferClosure)
             try self.engine.start()
@@ -141,16 +132,15 @@ class AudioRecorderBase {
     }
     
     // Stop AVAudioEngine and remove tap, save Data as WAV audio file, invoke delegate method
-    open func stopRecording(audioMetrics: AudioMetrics? = nil) {
+    open func stopRecording(audioRecording: AudioRecording? = nil) {
         if status == .recording {
             self.status = .idle
             engine.stop()
             engine.inputNode.removeTap(onBus: 0)
-            guard let data = data else { return }
             guard delegate != nil else { return }
             // Don't queue a delegate call if it has already been nilled
             DispatchQueue.main.async {
-                self.delegate?.onRecordStop(data: data, sampleRate: self.sampleRate, audioMetrics: audioMetrics)
+                self.delegate?.onRecordStop(audioRecording: audioRecording)
             }
         }
         if status == .aborted {

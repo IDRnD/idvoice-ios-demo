@@ -1,7 +1,7 @@
 //
 //  SettingsViewController.swift
 //  IDVoice-Example
-//  Copyright © 2020 ID R&D. All rights reserved.
+//  Copyright © 2023 ID R&D. All rights reserved.
 //
 
 import UIKit
@@ -122,5 +122,10 @@ class SettingsViewController: UIViewController {
         alert.addAction(resetAction)
         alert.addAction(cancelAction)
         self.present(alert, animated: true, completion: nil)
+    }
+    
+    // MARK: - Deinit
+    deinit {
+        print(Info.objectDeinitInfo(self))
     }
 }

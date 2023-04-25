@@ -1,7 +1,7 @@
 //
 //  Extensions.swift
 //  IDVoice-Example
-//  Copyright © 2020 ID R&D. All rights reserved.
+//  Copyright © 2023 ID R&D. All rights reserved.
 //
 
 import UIKit
@@ -75,3 +75,4 @@ extension UIView {
         }
     }
 }
+
