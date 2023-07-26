@@ -14,8 +14,54 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         configureGlobalUI()
         registerUserDefaultValues()
-        initializeVoiceEngines()
+        
+        // Check VoiceSDK license validity on app start before engine initialisation
+        applyAndValidateLicense { [weak self] error in
+            if let error = error {
+                print("License validation failed with error: \(error)")
+                // Prepare to show view controller with license error
+                self?.prepareLicenseViewController(withError: error)
+            } else {
+                // License validation succeeded, continue with VoiceSDK engines initialisation.
+                print("License validation successful!")
+                self?.initializeVoiceEngines()
+            }
+        }
+        
         return true
+    }
+    
+    fileprivate func applyAndValidateLicense(completion: @escaping (Error?) -> Void) {
+        do {
+            _ = try LicenseManager().checkLicense()
+            completion(nil)
+        } catch {
+            completion(error)
+        }
+    }
+    
+    fileprivate func prepareLicenseViewController(withError error: Error) {
+        let viewController =  UIStoryboard(
+            name: "Main",
+            bundle: nil
+        ).instantiateViewController(
+            withIdentifier: "LicenseViewController"
+        ) as! LicenseViewController
+        
+        
+        viewController.error = error
+        print(error.localizedDescription)
+        
+        if let error = error as? LicenseError {
+            switch error {
+            case .licenseExpired:
+                viewController.status = .expired
+            default: viewController.status = .failed
+            }
+        }
+        
+        window?.rootViewController = viewController
+        window?.makeKeyAndVisible()
     }
     
     fileprivate func configureGlobalUI() {

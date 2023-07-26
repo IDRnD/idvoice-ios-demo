@@ -117,4 +117,10 @@ struct Globals {
         "Speak clearly directly into the mic.",
         "Be sure to speak loudly and clearly."
     ]
+    
+    static let failedLicenseTitle = "VoiceSDK license error."
+    static let expiredLicenseTitle = "Your VoiceSDK license has expired."
+    static let contactText = "To continue using the app, please tap on the 'Contact us' button below to get in touch."
+    static let contactUrl = "https://www.idrnd.ai/contact-us"
+    static let contactButtonTitle = "Contact us"
 }

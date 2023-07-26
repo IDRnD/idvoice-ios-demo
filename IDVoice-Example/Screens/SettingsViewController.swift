@@ -15,6 +15,8 @@ class SettingsViewController: UIViewController {
     @IBOutlet weak var livenessThresholdSlider: UISlider!
     @IBOutlet weak var livenessThresholdStack: UIStackView!
     @IBOutlet weak var livenessThresholdLabel: UILabel!
+    @IBOutlet weak var licenseExpirationDateLabel: UILabel!
+    @IBOutlet weak var licenseInfoView: UIView!
     @IBOutlet weak var resetEnrollmentsButton: UIButton!
     
     override func viewDidLoad() {
@@ -23,6 +25,7 @@ class SettingsViewController: UIViewController {
         configureResetButton()
         initThresholds()
         initSettingsSwitches()
+        getVoiceSDKLicenseExpirationDate()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -42,6 +45,9 @@ class SettingsViewController: UIViewController {
         if #available(iOS 13.0, *) {
             resetEnrollmentsButton?.layer.cornerCurve = CALayerCornerCurve.continuous
         }
+        
+        licenseInfoView.layer.cornerRadius = 5
+        licenseInfoView.clipsToBounds = true
     }
     
     fileprivate func configureResetButton() {
@@ -71,6 +77,10 @@ class SettingsViewController: UIViewController {
         self.enrollmentQualityCheckSwitch.isOn = UserDefaults.standard.bool(
             forKey: Globals.isEnrollmentQualityCheckEnabled
         )
+    }
+    
+    fileprivate func getVoiceSDKLicenseExpirationDate() {
+        licenseExpirationDateLabel.text = "License expires at:" + " \(LicenseManager().getLicenseDateStringFromInfo())"
     }
     
     fileprivate func thresholdToString(_ threshold: Float) -> String {
