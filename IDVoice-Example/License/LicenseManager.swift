@@ -29,7 +29,7 @@ class LicenseManager {
     // Retrieve the license expiration date from BuildInfo.
     func getLicenseExpirationDate() throws -> Date {
         let info = BuildInfo()
-        let licenseInfoString = info.licenseInfo
+        let licenseInfoString = info.licenseExpirationDate
         guard let expirationDate = convertStringToDate(licenseInfoString) else {
             throw LicenseError.failedToGetLicenseExpirationDate
             
