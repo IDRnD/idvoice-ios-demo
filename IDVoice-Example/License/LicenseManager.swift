@@ -39,8 +39,7 @@ class LicenseManager {
     
     // Retrieve the license expiration date string from BuildInfo.
     func getLicenseDateStringFromInfo() -> String {
-        let dateString = BuildInfo().licenseInfo.components(separatedBy: " ").last ?? ""
-        return dateString
+        return BuildInfo().licenseExpirationDate
     }
     
     // Check the validity of the license.
@@ -64,11 +63,8 @@ class LicenseManager {
     // The input dateString format should be "License expires at: yyyy-MM-dd".
     // Returns the Date object if conversion is successful, otherwise nil.
     private func convertStringToDate(_ dateString: String) -> Date? {
-        guard let inputDateString = dateString.components(separatedBy: " ").last else { return nil }
-        
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
-        
-        return dateFormatter.date(from: inputDateString)
+        return dateFormatter.date(from: dateString)
     }
 }

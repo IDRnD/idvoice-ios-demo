@@ -123,4 +123,13 @@ struct Globals {
     static let contactText = "To continue using the app, please tap on the 'Contact us' button below to get in touch."
     static let contactUrl = "https://www.idrnd.ai/contact-us"
     static let contactButtonTitle = "Contact us"
+    
+    struct QualityError {
+        static let qualityErrorTitle = "Quality Issue"
+        static let undetermined = "Could not check recording quality. Please try again."
+        static let notEnoughSpeech = "Not enough speech. Please record again."
+        static let tooNoisy = "Too noisy. Please record again in a quiter enviroment."
+        static let templateMatchingFailed = "Voice does not match the reference template."
+        static let ok = ""
+    }
 }

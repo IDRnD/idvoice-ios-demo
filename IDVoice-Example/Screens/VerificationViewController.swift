@@ -9,9 +9,10 @@ import AVFoundation
 import VoiceSdk
 
 class VerificationViewController: UIViewController {
-    
     @IBOutlet weak var instructionsLabel: UILabel!
     @IBOutlet weak var recordButton: UIButton!
+    
+    private var recordingController: RecordingViewController?
     
     private var voiceTemplateFactory: VoiceTemplateFactory?
     private var voiceTemplateMatcher: VoiceTemplateMatcher?
@@ -97,6 +98,7 @@ class VerificationViewController: UIViewController {
             vc.verificationMode = self.verificationMode
             vc.minSpeechLengthMs = self.minSpeechLengthMs
             vc.delegate = self
+            self.recordingController = vc
         } else if segue.identifier == "showResultsView" {
             let view = segue.destination as! ResultViewController
             view.verificationScore = verificationProbability
@@ -152,7 +154,7 @@ class VerificationViewController: UIViewController {
             // using various audio metrics such as signal-to-noise ratio, speech length etc.
             print("SNR: \(audioMetrics.snrDb), Audio Duration (Ms): \(audioMetrics.audioDurationMs), Speech Duration (Ms): \(audioMetrics.speechDurationMs),")
         }
-        
+        recordingController?.isComplete = true
         performSegue(withIdentifier: "showResultsView", sender: nil)
     }
     
@@ -195,5 +197,9 @@ extension VerificationViewController: RecordingViewControllerDelegate {
     
     func onError(errorText: String) {
         self.presentAlert(title: "Error", message: errorText, buttonTitle: "Okay")
+    }
+    
+    func onCancel() {
+        recordingController?.isComplete = true
     }
 }

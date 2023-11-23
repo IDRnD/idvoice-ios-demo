@@ -10,6 +10,7 @@ import AVFoundation
 protocol RecordingViewControllerDelegate: AnyObject {
     func onRecordStop(data: Data, sampleRate: Int, audioMetrics: AudioMetrics?)
     func onError(errorText: String)
+    func onCancel()
 }
 
 enum RecordingMode {
@@ -17,12 +18,11 @@ enum RecordingMode {
     case verification
 }
 
-class RecordingViewController: UIViewController {
+class RecordingViewController: UIViewController, UIAdaptivePresentationControllerDelegate {
     @IBOutlet weak var micImage: UIImageView!
     @IBOutlet weak var instructionsLabel: UILabel!
     @IBOutlet weak var metricNameLabel: UILabel!
     @IBOutlet weak var metricAmountLabel: UILabel!
-    @IBOutlet weak var cancelButton: UIButton!
     @IBOutlet weak var spinner: UIActivityIndicatorView!
     
     @IBOutlet weak var progressMessageLabel: UILabel!
@@ -34,6 +34,13 @@ class RecordingViewController: UIViewController {
     
     var audioRecorder: AudioRecorder?
     weak var delegate: RecordingViewControllerDelegate?
+    
+    @IBOutlet weak var checkStackView: UIStackView!
+    @IBOutlet weak var check0: UIImageView!
+    @IBOutlet weak var check1: UIImageView!
+    @IBOutlet weak var check2: UIImageView!
+    
+    var checks: [UIImageView] = []
     
     private var acceptedSpeechMs: Float = 0
     private var currentSpeechLength: Float = 0 {
@@ -50,12 +57,38 @@ class RecordingViewController: UIViewController {
     // This parameters vary depending on used mode (Text Dependent, Text Independent) and scenario (enrollment, verification).
     var minSpeechLengthMs: Float = Globals.minSpeechLengthMs
     
+    var isComplete = false {
+        didSet {
+            if isComplete {
+                stopRecorder()
+                self.dismiss(animated: true)
+            }
+        }
+    }
+    
+    var isAnalyzing = false {
+        didSet {
+            DispatchQueue.main.async {
+                UIView.animate(withDuration: 0.3) {
+                    self.spinner.isHidden = !self.isAnalyzing
+                    if self.isAnalyzing {
+                        self.spinner.startAnimating()
+                    } else {
+                        self.spinner.stopAnimating()
+                    }
+                }
+            }
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
         setInstructionText()
         setupBackgroundStateObserver()
         configureAudioRecorder()
+        
+        checks = [check0, check1, check2]
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -64,7 +97,7 @@ class RecordingViewController: UIViewController {
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
+        super.viewDidAppear(animated)
         audioRecorder?.startRecording()
     }
     
@@ -77,14 +110,18 @@ class RecordingViewController: UIViewController {
         view.setBackgroundColor()
         micImage.tintColor = .redColor
         metricAmountLabel.textColor = .accentColor
-        cancelButton.tintColor = .systemGray
         
-        if #available(iOS 13.0, *) {
-            cancelButton?.layer.cornerCurve = CALayerCornerCurve.continuous
+        switch verificationMode {
+        case .textIndependent:
+            checkStackView.isHidden = true
+        case .continuous:
+            checkStackView.isHidden = true
+            recordingProgressView.isHidden = true
+        default: break
         }
         
-        if verificationMode == .continuous {
-            recordingProgressView.isHidden = true
+        if recordingMode == .verification {
+            checkStackView.isHidden = true
         }
         
         configureMessageView()
@@ -141,7 +178,8 @@ class RecordingViewController: UIViewController {
         )
     }
     
-    private func showMessage(_ message: RecordingMessage) {
+    func showMessage(_ message: RecordingMessage) {
+        self.isAnalyzing = false
         if let imageName = message.imageName {
             if #available(iOS 13.0, *) {
                 messageImage.image = UIImage(systemName: imageName)
@@ -171,7 +209,7 @@ class RecordingViewController: UIViewController {
     }
     
     @IBAction func cancelButtonPressed(_ sender: UIButton) {
-        dismiss(animated: true, completion: nil)
+        delegate?.onCancel()
     }
     
     // MARK: - Deinit
@@ -187,13 +225,7 @@ extension RecordingViewController: AudioRecorderDelegate {
     }
     
     func onAnalyzing() {
-        DispatchQueue.main.async {
-            UIView.animate(withDuration: 0.3) {
-                self.spinner.isHidden = false
-                self.micImage.alpha = 0
-                self.spinner.startAnimating()
-            }
-        }
+        isAnalyzing = true
     }
     
     func onContinuousVerificationProbabilityAvailable(verificationProbability: Float, backgroundLengthMs: Float) {
@@ -208,13 +240,15 @@ extension RecordingViewController: AudioRecorderDelegate {
     
     func onRecordStop(audioRecording: AudioRecording?) {
         guard let audioRecording = audioRecording else { return }
+        self.stopRecorder()
+        
         passVoiceData(
             data: audioRecording.data,
             sampleRate: audioRecording.sampleRate,
             audioMetrics: audioRecording.audioMetrics
         ) {
             DispatchQueue.main.async {
-                self.dismiss(animated: true, completion: nil)
+                self.audioRecorder?.startRecording()
             }
         }
     }
@@ -235,9 +269,7 @@ extension RecordingViewController: AudioRecorderDelegate {
         }
     }
     
-    func onLongSilence() {
-        dismiss(animated: true, completion: nil)
-    }
+    func onLongSilence() {}
 }
 
 extension RecordingViewController: AudioChunkProcessorDelegate {
@@ -266,4 +298,3 @@ extension RecordingViewController: AudioChunkProcessorDelegate {
         showMessage(message)
     }
 }
-
