@@ -23,7 +23,7 @@ class AudioRecorder: AudioRecorderBase {
     
     private var minSpeechLengthMs: Float = 0
     private var maxSilenceLengthMs: Float = Globals.maxSilenceLengthMs
-    private var silenceDurationForAutostopMs: Float = 15000
+    private var silenceDurationForReset: Float = 500
     
     var trackSpeechLength = true
     var useSpeechSummaryToDetectSpeechEnd = true
@@ -54,18 +54,14 @@ class AudioRecorder: AudioRecorderBase {
             snrComputer = SNRChecker.shared
             
             // Create Speech EndPoint Detector to detect the end of speech
-            speechEndPointDetector = try SpeechEndpointDetector(
-                minSpeechLengthMs: UInt32(minSpeechLengthMs),
-                maxSilenceLengthMs: UInt32(maxSilenceLengthMs),
-                sampleRate: UInt32(sampleRate)
-            )
+            speechEndPointDetector = try SpeechEndpointDetector(minSpeechLengthMs: UInt32(minSpeechLengthMs),
+                                                                maxSilenceLengthMs: UInt32(maxSilenceLengthMs),
+                                                                sampleRate: UInt32(sampleRate))
             
             // Initialise AudioChunkProcessor for text independent enrollment
-            self.audioChunkProcessor = AudioChunkProcessor(
-                sampleRate: sampleRate,
-                minSpeechLengthMs: minSpeechLengthMs,
-                speechLengthForChunk: Globals.minSpeechLengthMsForAudioChunk
-            )
+            self.audioChunkProcessor = try AudioChunkProcessor(sampleRate: sampleRate,
+                                                               minSpeechLengthMs: minSpeechLengthMs,
+                                                               speechLengthForChunk: Globals.minSpeechLengthMsForAudioChunk)
                         
             // Set parameters for Continuous Verification mode
             if verificationMode == .continuous {
@@ -81,13 +77,12 @@ class AudioRecorder: AudioRecorderBase {
                 voiceTemplateMatcher = Globals.textIndependentVoiceTemplateMatcher
                 
                 // Prepare Continuous Verification Stream
-                continuousVerificationStream = try VoiceVerifyStream(
-                    voiceTemplateFactory: voiceTemplateFactory,
-                    voiceTemplateMatcher: voiceTemplateMatcher,
-                    voiceTemplate: voiceTemplate,
-                    sampleRate: Int(self.sampleRate),
-                    windowLengthSeconds: 3
-                )
+                continuousVerificationStream = try VoiceVerifyStream(voiceTemplateFactory: voiceTemplateFactory,
+                                                                     voiceTemplateMatcher: voiceTemplateMatcher,
+                                                                     voiceTemplates: [voiceTemplate],
+                                                                     sampleRate: Int(self.sampleRate),
+                                                                     audioContextLengthSeconds: 3,
+                                                                     windowLengthSeconds: 3)
             }
         } catch {
             print(error.localizedDescription)
@@ -103,6 +98,12 @@ class AudioRecorder: AudioRecorderBase {
     override func startRecording() {
         try? speechSummaryStream?.reset()
         super.startRecording()
+    }
+    
+    private func resetData() throws {
+        print("Silence. Resetting data...")
+        try self.speechSummaryStream.reset()
+        self.reset()
     }
     
     override func processBuffer(_ buffer: Data, time: AVAudioTime) {
@@ -145,10 +146,9 @@ class AudioRecorder: AudioRecorderBase {
             switch (self.verificationMode, self.recordingMode) {
             case (.textDependent, _ ), (.textIndependent, .verification) :
                 if let backgroundLengthMs = try self.speechSummaryStream?.getCurrentBackgroundLength() {
-                    // Stop recording if no speech is present for 'silenceDurationForAutostop' amount of Ms
-                    if backgroundLengthMs.floatValue > self.silenceDurationForAutostopMs {
-                        self.status = .longSilence
-                        self.stopRecording()
+                    // Reset data if no speech is present to avoid silence and large file size
+                    if backgroundLengthMs.floatValue > self.silenceDurationForReset {
+                        try resetData()
                     }
                     // Stop recording if minimum speech length is achieved (in "Continuous Verification" mode speech length is ignored).
                     if useSpeechSummaryToDetectSpeechEnd && speechLengthMs >
@@ -168,7 +168,7 @@ class AudioRecorder: AudioRecorderBase {
                 while (try self.continuousVerificationStream?.hasVerifyResults().isTrue)! {
                     // Get verification probability and invoke delegate method
                     let verificationProbability = (try self.continuousVerificationStream?
-                        .getVerifyResult().verifyResult.probability)! * 100
+                        .getVerifyResultForOneTemplate().verifyResult.probability)! * 100
                     DispatchQueue.main.async {
                         if let backgroundLengthMs = try? self.speechSummaryStream?.getCurrentBackgroundLength() {
                             self.delegate?.onContinuousVerificationProbabilityAvailable(
@@ -194,17 +194,13 @@ class AudioRecorder: AudioRecorderBase {
             let data = data,
             let snrDb = snrComputer.getSNR(forData: data) {
             
-            let audioMetrics = AudioMetrics(
-                audioDurationMs: lastSpeechInfo.totalLengthMs,
-                speechDurationMs: lastSpeechInfo.speechLengthMs,
-                snrDb: snrDb
-            )
+            let audioMetrics = AudioMetrics(audioDurationMs: lastSpeechInfo.totalLengthMs,
+                                            speechDurationMs: lastSpeechInfo.speechLengthMs,
+                                            snrDb: snrDb)
             
-            let audioRecording = AudioRecording(
-                data: data,
-                sampleRate: sampleRate,
-                audioMetrics: audioMetrics
-            )
+            let audioRecording = AudioRecording(data: data,
+                                                sampleRate: sampleRate,
+                                                audioMetrics: audioMetrics)
             self.stopRecording(audioRecording: audioRecording)
         }
     }

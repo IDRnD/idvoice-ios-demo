@@ -28,6 +28,8 @@ class VoiceEngineManager {
     private var speechSummaryEngine: SpeechSummaryEngine!
     private var snrComputer: SNRComputer!
     
+    private var qualityEngine: QualityCheckEngine!
+    
     func getSpeechSummaryEngine() -> SpeechSummaryEngine {
         if speechSummaryEngine == nil {
             speechSummaryEngine = try? SpeechSummaryEngine.init(path: Globals.speechSummaryInitDataPath)
@@ -79,9 +81,9 @@ class VoiceEngineManager {
         return nil
     }
     
-    func getAntiSpoofingEngine() -> LivenessEngine {
+    func getAntiSpoofingEngine() throws -> LivenessEngine {
         if livenessEngine == nil {
-            livenessEngine = try? LivenessEngine(path: Globals.livenessInitDataPath)
+            livenessEngine = try LivenessEngine(path: Globals.livenessInitDataPath)
         }
         return livenessEngine
     }
@@ -92,10 +94,10 @@ class VoiceEngineManager {
         }
     }
     
-    func getSNRComputer() -> SNRComputer {
-        if snrComputer == nil {
-            snrComputer = try? SNRComputer(path: Globals.speechSummaryInitDataPath)
+    func getQualityCheckEngine() throws -> QualityCheckEngine  {
+        if qualityEngine == nil {
+            qualityEngine = try QualityCheckEngine(path: Globals.qualityEngineInitDataPath)
         }
-        return snrComputer
+        return qualityEngine
     }
 }

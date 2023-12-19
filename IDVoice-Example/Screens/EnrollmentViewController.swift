@@ -16,11 +16,20 @@ class EnrollmentViewController: UIViewController {
     private var template: VoiceTemplate?
     
     private var recordingController: RecordingViewController?
-    
     private var referenceTemplate: VoiceTemplate?
-    private var isEnrollmentQualityCheckEnabled = UserDefaults.standard.bool(
-        forKey: Globals.isEnrollmentQualityCheckEnabled
-    )
+    
+    private var isEnrollmentQualityCheckEnabled: Bool {
+        UserDefaults.standard.bool(forKey: Globals.isEnrollmentQualityCheckEnabled)
+    }
+    
+    // Check if Liveness Check is enabled and if so initialise Liveness Engine
+    private var livenessCheckEnabled: Bool {
+        UserDefaults.standard.bool(forKey: Globals.isLivenessCheckEnabled)
+    }
+    
+    private var livenessThreshold: Float {
+        UserDefaults.standard.float(forKey: Globals.livenessThresholdkey)
+    }
     
     private let checkFilled = UIImage(named: "ok_on")
     private let checkEmpty = UIImage(named: "ok_off")
@@ -31,8 +40,11 @@ class EnrollmentViewController: UIViewController {
     private var numberOfTextDependentEnrollments = 3
     
     var verificationMode: VerificationMode?
-    private var voiceTemplateFactory: VoiceTemplateFactory?
-    private var voiceTemplateMatcher: VoiceTemplateMatcher?
+    
+    private var voiceTemplateFactory: VoiceTemplateFactory!
+    private var voiceTemplateMatcher: VoiceTemplateMatcher!
+    private var qualitycheckEngine: VoiceSDKQualityEngine!
+    private var livenessEngine: LivenessEngine?
     
     private var recordNumber: Int = 0
     private var enrollCount: Int {
@@ -58,6 +70,12 @@ class EnrollmentViewController: UIViewController {
             minSpeechLengthMs = Globals.minSpeechLengthMsTextIndependentEnroll
         default:
             break
+        }
+        
+        qualitycheckEngine = try? VoiceSDKQualityEngine()
+        
+        if livenessCheckEnabled {
+            livenessEngine = try? VoiceEngineManager.shared.getAntiSpoofingEngine()
         }
     }
     
@@ -104,21 +122,23 @@ class EnrollmentViewController: UIViewController {
         switch verificationMode {
         case .textDependent:
             // Check if the template quality qheck is enabled in settings
-            if !isEnrollmentQualityCheckEnabled
-                || self.checkEnrollmentQuality(data: data, sampleRate: sampleRate) == .ok {
-                // Process voice data if enrollment quality is fine
+            do {
+                try checkQuality(data: data,sampleRate: sampleRate, scenario: .enrollmentTD)
+                try checkLiveness(data: data, sampleRate: sampleRate)
+                
                 handleTextDependentEnrollmentSession(data: data,
                                                      sampleRate: sampleRate,
                                                      audioMetrics: audioMetrics)
+            } catch {
+                self.proceedWithFailedEnrollmentAttempt(error: error)
             }
         case .textIndependent:
             do {
-                self.template = try self.voiceTemplateFactory!.createVoiceTemplate(data, sampleRate: sampleRate)
+                try checkLiveness(data: data, sampleRate: sampleRate)
+                self.template = try self.voiceTemplateFactory.createVoiceTemplate(data, sampleRate: sampleRate)
             } catch {
-                print(error.localizedDescription)
-                // Present error and reset view controller state in case enrollment failure
                 self.presentAlert(title: "Error",
-                                  message: "Something went wrong. Could not create voice template. Please try again.",
+                                  message: error.localizedDescription,
                                   buttonTitle: "Okay",
                                   completion: { [weak self] _ in self?.resetControllerState() })
                 return
@@ -141,18 +161,21 @@ class EnrollmentViewController: UIViewController {
         }
     }
     
+    fileprivate func completeEnrollmentSessionWithError(_ error: Error) {
+        self.recordingController?.isComplete = true
+        self.presentAlert(title: "Error",
+                          message: error.localizedDescription,
+                          buttonTitle: "Ok",
+                          completion: nil)
+    }
+    
     fileprivate func handleTextDependentEnrollmentSession(data: Data, sampleRate: Int, audioMetrics: AudioMetrics?) {
         var voiceTemplate: VoiceTemplate?
         do {
             // Create voice template after each attempt and appending it to an array of voice tamplates
-            voiceTemplate = try self.voiceTemplateFactory!.createVoiceTemplate(data, sampleRate: sampleRate)
+            voiceTemplate = try self.voiceTemplateFactory.createVoiceTemplate(data, sampleRate: sampleRate)
         } catch {
-            self.recordingController?.isComplete = true
-            self.presentAlert(title: "Error",
-                              message: "Could not create voice template, please try again",
-                              buttonTitle: "Ok",
-                              completion: nil)
-            print(error.localizedDescription)
+            completeEnrollmentSessionWithError(error)
             return
         }
         switch self.recordNumber {
@@ -164,13 +187,12 @@ class EnrollmentViewController: UIViewController {
             proceedWithSuccessfulEnrollmentAttempt()
         case 1...self.enrollCount - 1:
             if let voiceTemplate = voiceTemplate {
-                // Check if the template quality qheck is enabled in settings
-                if !isEnrollmentQualityCheckEnabled
-                    || checkTemplateMatchingAgainstReferenceTemplate(voiceTemplate: voiceTemplate) {
-                    appendVoiceTemplateAndCompleteTextDependentEnrollmentIfNeeded(
-                        voiceTemplate: voiceTemplate,
-                        audioMetrics: audioMetrics
-                    )
+                do {
+                    try matchAgainstReferenceTemplate(voiceTemplate: voiceTemplate)
+                    appendVoiceTemplateAndCompleteTextDependentEnrollmentIfNeeded(voiceTemplate: voiceTemplate,
+                                                                                  audioMetrics: audioMetrics)
+                } catch {
+                    self.proceedWithFailedEnrollmentAttempt(error: error)
                 }
             }
         default:
@@ -181,7 +203,7 @@ class EnrollmentViewController: UIViewController {
     fileprivate func proceedWithSuccessfulEnrollmentAttempt() {
         print("Voice template \(self.templates.count) of \(self.enrollCount) is created.")
         let message = RecordingMessage(imageName: "checkmark.circle",
-            text: "Template \(self.templates.count) of \(self.enrollCount) created.")
+                                       text: "Template \(self.templates.count) of \(self.enrollCount) created.")
         recordingController?.showMessage(message)
         if let nextIncompleteIndex = recordingController?.checks.firstIndex(where: { $0.image != self.checkFilled }) {
             recordingController?.checks[nextIncompleteIndex].image = self.checkFilled
@@ -190,9 +212,14 @@ class EnrollmentViewController: UIViewController {
     }
     
     fileprivate func proceedWithFailedEnrollmentAttempt(error: Error) {
-        let message = RecordingMessage(imageName: "exclamationmark.triangle",
-                                       text: error.localizedDescription,
+        var message = RecordingMessage()
+        if let qualityError = error as? QualityError {
+            message = RecordingMessage(imageName: qualityError.imageName,
+                                       text: qualityError.localizedDescription,
                                        isError: true)
+        } else {
+            message = RecordingMessage(text: error.localizedDescription, isError: true)
+        }
         recordingController?.showMessage(message)
     }
     
@@ -220,70 +247,40 @@ class EnrollmentViewController: UIViewController {
         }
     }
     
-    private func checkEnrollmentQuality(data: Data, sampleRate: Int, audioMetrics: AudioMetrics? = nil) -> QualityError {
-        var qualityCheckResult: QualityCheckResult?
-        guard voiceTemplateFactory != nil else { print("voiceTemplateFactory is nil"); return QualityError.undetermined }
+    // Check the quality of the provided voice data based on the specified scenario.
+    fileprivate func checkQuality(data: Data, sampleRate: Int, scenario: QualityCheckScenario) throws {
+        // Check if enrollment quality check is enabled.
+        guard isEnrollmentQualityCheckEnabled else { return }
         
-        // Set custom thresholds for checkQuality function if needed
-        let thresholds = QualityCheckThresholds()
-        // Minimum speech length (Ms)
-        thresholds.minimumSpeechLengthMs = Globals.minSpeechLengthMs
-        // Minimim Signal-to-noise ratio (dB)
-        thresholds.minimumSnrDb = 10
-        
-        do {
-            // Get enrollment audio quality result
-            qualityCheckResult = try self.voiceTemplateFactory?.checkQuality(data,
-                                                                             sampleRate: sampleRate,
-                                                                             thresholds: thresholds)
-        } catch {
-            print(error.localizedDescription)
-            return QualityError.undetermined
-        }
-        
-        if let qualityCheckResult = qualityCheckResult {
-            switch qualityCheckResult.qualityShortDescription {
-            case .OK:
-                return QualityError.ok
-            case .TOO_NOISY:
-                proceedWithFailedEnrollmentAttempt(error: QualityError.tooNoisy)
-                return QualityError.tooNoisy
-            case .TOO_SMALL_SPEECH_TOTAL_LENGTH:
-                proceedWithFailedEnrollmentAttempt(error: QualityError.tooSmallSpeechTotalLength)
-                return QualityError.tooSmallSpeechTotalLength
-            default:
-                return QualityError.undetermined
-            }
-        }
-        return QualityError.undetermined
+        // Get recommended quality thresholds for the given scenario.
+        let thresholds = try qualitycheckEngine.getRecommendedThresholds(scenario: scenario)
+        try qualitycheckEngine.checkQuality(data: data, sampleRate: sampleRate, thresholds: thresholds)
     }
     
-    fileprivate func checkTemplateMatchingAgainstReferenceTemplate(voiceTemplate: VoiceTemplate) -> Bool {
-        var matchingResult: VerifyResult?
-        guard let referenceTemplate = referenceTemplate else {
-            return false
+    // Match the provided voice template against a reference template for enrollment quality.
+    fileprivate func matchAgainstReferenceTemplate(voiceTemplate: VoiceTemplate) throws {
+        guard isEnrollmentQualityCheckEnabled else { return }
+        guard let referenceTemplate = referenceTemplate else { return }
+        
+        let score = try self.voiceTemplateMatcher.matchVoiceTemplates(referenceTemplate,template2: voiceTemplate).score
+        print("Templates Matching Score: \(score)")
+        
+        // Check if the matching score meets the enrollment templates matching threshold.
+        if score < Globals.enrollmentTemplatesMatchingThreshold {
+            throw QualityError.referenceTemplateMatchingFailed
         }
-        do {
-            matchingResult = try self.voiceTemplateMatcher?.matchVoiceTemplates(
-                referenceTemplate,
-                template2: voiceTemplate
-            )
-        } catch {
-            print("Could not determine verification result for templates.")
-            print(error.localizedDescription)
-            recordingController?.isComplete = true
-            self.presentAlert(title: "Error",
-                              message: error.localizedDescription,
-                              buttonTitle: "Ok",
-                              completion: nil)
-            return false
-        }
-        print("Templates Matching Score: \(matchingResult!.score)")
-        if matchingResult!.score > Globals.enrollmentTemplatesMatchingThreshold {
-            return true
-        } else {
-            proceedWithFailedEnrollmentAttempt(error: QualityError.referenceTemplateMatchingFailed)
-            return false
+    }
+    
+    // Check the liveness of the provided voice data using the liveness engine.
+    fileprivate func checkLiveness(data: Data, sampleRate: Int) throws {
+        guard let livenessEngine = livenessEngine else { return }
+        
+        // Get the liveness probability from the liveness engine.
+        let probability = try livenessEngine.checkLiveness(data, sampleRate: sampleRate).getValue().probability
+        
+        // Check if the liveness probability is below the specified threshold.
+        if probability < livenessThreshold {
+            throw QualityError.notLive
         }
     }
     

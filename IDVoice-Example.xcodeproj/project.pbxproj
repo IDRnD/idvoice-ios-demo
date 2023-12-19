@@ -11,6 +11,7 @@
 		7D5BE0CA2A6FEAA800CFBDAF /* LicenseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D5BE0C82A6FEAA800CFBDAF /* LicenseManager.swift */; };
 		7D5BE0CB2A6FEAA800CFBDAF /* LicenseError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D5BE0C92A6FEAA800CFBDAF /* LicenseError.swift */; };
 		7D5BE0CE2A6FEB8A00CFBDAF /* LicenseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D5BE0CD2A6FEB8A00CFBDAF /* LicenseViewController.swift */; };
+		7D69B2972B18DB560049F4DF /* QualityCheckEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D69B2962B18DB560049F4DF /* QualityCheckEngine.swift */; };
 		7D7871BC29DD8CBE00C68594 /* IDError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7871B929DD8CBE00C68594 /* IDError.swift */; };
 		7D7871C329DD9A7100C68594 /* SNRChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7871BF29DD9A7000C68594 /* SNRChecker.swift */; };
 		7D7871C629DD9A7100C68594 /* AudioChunkProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7871C229DD9A7000C68594 /* AudioChunkProcessor.swift */; };
@@ -59,6 +60,7 @@
 		7D5BE0C82A6FEAA800CFBDAF /* LicenseManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LicenseManager.swift; sourceTree = "<group>"; };
 		7D5BE0C92A6FEAA800CFBDAF /* LicenseError.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LicenseError.swift; sourceTree = "<group>"; };
 		7D5BE0CD2A6FEB8A00CFBDAF /* LicenseViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LicenseViewController.swift; sourceTree = "<group>"; };
+		7D69B2962B18DB560049F4DF /* QualityCheckEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QualityCheckEngine.swift; sourceTree = "<group>"; };
 		7D7871B929DD8CBE00C68594 /* IDError.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IDError.swift; sourceTree = "<group>"; };
 		7D7871BF29DD9A7000C68594 /* SNRChecker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SNRChecker.swift; sourceTree = "<group>"; };
 		7D7871C229DD9A7000C68594 /* AudioChunkProcessor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioChunkProcessor.swift; sourceTree = "<group>"; };
@@ -116,6 +118,7 @@
 			isa = PBXGroup;
 			children = (
 				7D7871C229DD9A7000C68594 /* AudioChunkProcessor.swift */,
+				7D69B2962B18DB560049F4DF /* QualityCheckEngine.swift */,
 				7D7871BF29DD9A7000C68594 /* SNRChecker.swift */,
 				7DC880EE2B0BE55100046A4C /* QualityError.swift */,
 			);
@@ -282,6 +285,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7D69B2972B18DB560049F4DF /* QualityCheckEngine.swift in Sources */,
 				814E8994270DC49B003365BB /* AudioRecorderBase.swift in Sources */,
 				811BC11D24D31D1A007AD643 /* ResultViewController.swift in Sources */,
 				7D7871C629DD9A7100C68594 /* AudioChunkProcessor.swift in Sources */,
@@ -464,8 +468,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.12.1;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.idrnd.IDVoice-Example";
+				MARKETING_VERSION = 3.13.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.idrnd.idvoice-example-app";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -488,8 +492,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.12.1;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.idrnd.IDVoice-Example";
+				MARKETING_VERSION = 3.13.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.idrnd.idvoice-example-app";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;

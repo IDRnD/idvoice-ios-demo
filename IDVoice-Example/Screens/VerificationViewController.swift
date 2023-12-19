@@ -16,6 +16,7 @@ class VerificationViewController: UIViewController {
     
     private var voiceTemplateFactory: VoiceTemplateFactory?
     private var voiceTemplateMatcher: VoiceTemplateMatcher?
+    private var qualitycheckEngine: VoiceSDKQualityEngine!
     
     private var livenessEngine: LivenessEngine?
     var verificationMode: VerificationMode?
@@ -52,8 +53,10 @@ class VerificationViewController: UIViewController {
         let livenessCheckEnabled = UserDefaults.standard.bool(forKey: Globals.isLivenessCheckEnabled)
         
         if livenessCheckEnabled {
-            livenessEngine = VoiceEngineManager.shared.getAntiSpoofingEngine()
+            livenessEngine = try? VoiceEngineManager.shared.getAntiSpoofingEngine()
         }
+        
+        qualitycheckEngine = try? VoiceSDKQualityEngine()
     }
     
     fileprivate func setInstructionText() {
@@ -114,8 +117,10 @@ class VerificationViewController: UIViewController {
         let templateKey = verificationMode == .textDependent ?
         Globals.textDependentVoiceTemplateKey : Globals.textIndependentVoiceTemplateKey
         
+        
         // Voice verification
         do {
+            try checkQuality(data: data, sampleRate: sampleRate)
             // 1) Load user enrollment template
             guard let templateData = UserDefaults.standard.data(forKey: templateKey) else { return }
             let enrollTemplate = try VoiceTemplate(bytes: templateData)
@@ -129,8 +134,7 @@ class VerificationViewController: UIViewController {
                     enrollTemplate, template2: verifyTemplate).probability ?? 0
             }
         } catch {
-            print(error.localizedDescription)
-            self.presentAlert(title: "Error", message: error.localizedDescription, buttonTitle: "Okay")
+            proceedWithFailedVerificationAttempt(error: error)
             return
         }
         
@@ -181,6 +185,29 @@ class VerificationViewController: UIViewController {
                 self.performSegue(withIdentifier: "showRecordingView", sender: self)
             }
         }
+    }
+    
+    // Check the quality of the provided voice data based on the specified scenario.
+    fileprivate func checkQuality(data: Data, sampleRate: Int) throws {
+        // Check if enrollment quality check is enabled.
+        
+        // Determine current scenatio
+        let scenario: QualityCheckScenario = verificationMode == .textDependent ? .verificationTD : .verificationTI
+        // Get recommended quality thresholds for the given scenario.
+        let thresholds = try qualitycheckEngine.getRecommendedThresholds(scenario: scenario)
+        try qualitycheckEngine.checkQuality(data: data, sampleRate: sampleRate, thresholds: thresholds)
+    }
+    
+    fileprivate func proceedWithFailedVerificationAttempt(error: Error) {
+        var message = RecordingMessage()
+        if let qualityError = error as? QualityError {
+            message = RecordingMessage(imageName: qualityError.imageName,
+                                       text: qualityError.localizedDescription,
+                                       isError: true)
+        } else {
+            message = RecordingMessage(text: error.localizedDescription, isError: true)
+        }
+        recordingController?.showMessage(message)
     }
     
     // MARK: - Deinit

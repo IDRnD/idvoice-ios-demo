@@ -19,6 +19,7 @@ struct Globals {
     static var textIndependentVoiceTemplateMatcher: VoiceTemplateMatcher?
     
     static var speechSummaryEngine: SpeechSummaryEngine?
+    static var qualityCheckEngine: QualityCheckEngine?
     
     // Directories for audio files saving
     struct Directory {
@@ -40,8 +41,8 @@ struct Globals {
     static let isEnrollmentQualityCheckEnabled = "enrollment_quality_check_enabled"
     
     // Speech analysis parameters
-    static let minSpeechLengthMs: Float = 500
-    static let minSpeechLengthMsTextDependentEnroll: Float = 500
+    static let minSpeechLengthMs: Float = 700
+    static let minSpeechLengthMsTextDependentEnroll: Float = 700
     static let minSpeechLengthMsTextIndependentEnroll: Float = 12000
     static let minSpeechLengthMsForTextIndependentVerify: Float = 500
     static let minSpeechLengthMsForTextDependentVerify: Float = 500
@@ -50,7 +51,7 @@ struct Globals {
     
     // Parameters for enrollment recordings quality check
     static let enrollmentTemplatesMatchingThreshold: Float = 0.5
-    static let snrThresholdForEnrollmentDb: Float = 20
+    static let snrThresholdForEnrollmentDb: Float = 10
     
     // FileManager Directory URL
     static let documentDirectoryUrl = try! FileManager.default.url(
@@ -64,12 +65,13 @@ struct Globals {
     static let voiceTemplateFactoryAndMatcherTDInitDataPath = Bundle.main.resourcePath! + "/verify/mic-v1/"
     static let voiceTemplateFactoryAndMatcherTIInitDataPath = Bundle.main.resourcePath! + "/verify/mic-v1/"
     static let speechSummaryInitDataPath = Bundle.main.resourcePath! + "/media/speech_summary/"
-    static let livenessInitDataPath = Bundle.main.resourcePath! + "/liveness/"
+    static let livenessInitDataPath = Bundle.main.resourcePath! + "/liveness/replay/"
     static let snrComputerInitDataPath = Bundle.main.resourcePath! + "/media/snr_computer/"
+    static let qualityEngineInitDataPath = Bundle.main.resourcePath! + "/media/quality_check_with_msd/"
     
     // Instruction Strings
     static let textDependentEnrollmentInstruction = """
-    To enroll in Text Dependent mode please provide 3 voice recordings with 'Golden State Warriors' phrase.
+    To enroll in Text Dependent mode please provide 3 voice recordings with 'Crouching Tiger Hidden Dragon' phrase.
     
     Press Record to start recording.
     """
@@ -79,7 +81,7 @@ struct Globals {
     Press Record to start recording.
     """
     static let textDependentVerificationInstruction = """
-    To verify in Text Dependent mode  please prepare to say 'Golden State Warriors' phrase.
+    To verify in Text Dependent mode  please prepare to say 'Crouching Tiger Hidden Dragon' phrase.
     
     Press Record to start recording.
     """
@@ -94,7 +96,7 @@ struct Globals {
     
     Press Record to begin.
     """
-    static let textDependentEnrollmentRecorderInstuction = "Please say \n 'Golden State Warriors'"
+    static let textDependentEnrollmentRecorderInstuction = "Please say \n 'Crouching Tiger Hidden Dragon'"
     static let textIndependentEnrollmentRecorderInstuction = "Please provide at least \(Int(minSpeechLengthMsTextIndependentEnroll / 1000)) seconds of speech."
     static let textIndependentVerificationRecorderInstuction = "Please say anything you want"
     static let continuousVerificationRecorderInstuction = "Listening for a stream of speech..."
@@ -128,8 +130,11 @@ struct Globals {
         static let qualityErrorTitle = "Quality Issue"
         static let undetermined = "Could not check recording quality. Please try again."
         static let notEnoughSpeech = "Not enough speech. Please record again."
+        static let tooSmallRelativeSpeech = "Too small relative speech length. Please record again."
         static let tooNoisy = "Too noisy. Please record again in a quiter enviroment."
         static let templateMatchingFailed = "Voice does not match the reference template."
+        static let multipleSpeakers = "Multiple speakers detected. Please try again."
+        static let notLive = "Voice is not live. Please record again."
         static let ok = ""
     }
 }

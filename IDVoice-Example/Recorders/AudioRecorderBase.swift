@@ -58,12 +58,11 @@ class AudioRecorderBase {
     }
     
     func reset() {
-        data = nil
+        data = Data()
     }
     
     open func startRecording() {
         reset()
-        data = Data()
         
         print("Starting Audio Recorder...")
         print("Expected sample rate: \(self.sampleRate), Current sample rate: \(self.engine.inputNode.inputFormat(forBus: 0).sampleRate)")

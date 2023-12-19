@@ -1,5 +1,5 @@
 //
-//  AudioRecorder.swift
+//  SNRChecker.swift
 //  IDVoice-Example
 //  Copyright © 2023 ID R&D. All rights reserved.
 //

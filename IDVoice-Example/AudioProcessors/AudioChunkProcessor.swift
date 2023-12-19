@@ -7,12 +7,14 @@
 import Foundation
 import VoiceSdk
 
+// Struct representing a message during recording
 struct RecordingMessage {
-    var imageName: String?
+    var imageName: String? = "exclamationmark.triangle"
     var text: String = ""
     var isError: Bool = false
 }
 
+// Protocol defining delegate methods for audio chunk processing
 protocol AudioChunkProcessorDelegate: AnyObject {
     func onCurrentChunkSpeechLengthAvailiable(speechLength: Float)
     func onCollectedSpeechLengthAvailable(speechLength: Float, audioLength: Float)
@@ -30,11 +32,15 @@ class AudioChunkProcessor {
         forKey: Globals.isEnrollmentQualityCheckEnabled
     )
     
+    // Initial configuration parameters
     private var speechSummaryEngine: SpeechSummaryEngine!
     private var speechSummaryStream: SpeechSummaryStream!
-
+    private var qualitycheckEngine: VoiceSDKQualityEngine!
+    
+    // Delegate for handling callbacks
     weak var delegate: AudioChunkProcessorDelegate?
     
+    // Speech summary and quality check engines
     private var collectedSpeechLengthMs: Float = 0
     private var collectedAudioLengthMs: Float = 0
     private var recordingDurationMs: Float = 0
@@ -58,30 +64,30 @@ class AudioChunkProcessor {
         }
     }
     
+    // Flags and data buffers
     private var voiceDataCollectionComplete = false
     private var audioChunkData = Data()
     private var mergedAudioData = Data()
     private var tempAudioData = Data()
     
+    // User messages for accepted and rejected recordings
     private let acceptedRecordingsUserMessages = Globals.acceptedRecordingsMessages
     private let rejectedRecordingsUserMessages = Globals.rejectedRecordingsMessages
-
-    init(sampleRate: Int, minSpeechLengthMs: Float, speechLengthForChunk: Float) {
+    
+    // MARK: - Initialization
+    init(sampleRate: Int, minSpeechLengthMs: Float, speechLengthForChunk: Float) throws {
         self.sampleRate = sampleRate
         self.minSpeechLengthMs = minSpeechLengthMs
         self.speechLengthForChunk = speechLengthForChunk
-        initEngines()
+        try initEngines()
     }
     
-    private func initEngines() {
-        do {
-            speechSummaryEngine =
-            try SpeechSummaryEngine(path: Globals.speechSummaryInitDataPath)
-            speechSummaryStream =
-            try speechSummaryEngine.createStream(Int32(sampleRate))
-        } catch {
-            print(error)
-        }
+    private func initEngines() throws {
+        speechSummaryEngine =
+        try SpeechSummaryEngine(path: Globals.speechSummaryInitDataPath)
+        speechSummaryStream =
+        try speechSummaryEngine.createStream(Int32(sampleRate))
+        qualitycheckEngine = try VoiceSDKQualityEngine()
     }
     
     func process(buffer: Data?) {
@@ -93,6 +99,7 @@ class AudioChunkProcessor {
         tempAudioData.append(buffer)
     }
     
+    // Analyze the current audio chunk
     private func analyseAudioChunk(inData data: Data) {
         guard let speechInfo = try? speechSummaryStream.getTotalSpeechInfo() else { return }
         speechLengthMs = speechInfo.speechLengthMs
@@ -102,35 +109,30 @@ class AudioChunkProcessor {
             try? speechSummaryStream.reset()
             tempAudioData = Data()
             
-            let snr = SNRChecker.shared.getSNR(forData: audioChunkData) ?? 0
-            
-            let formatted = String(format: "%.1f dB", snr)
-            if snr >= sNRThreshold || !isEnrollmentQualityCheckEnabled {
-                print("\n🔊 ✅ SNR: \(formatted)")
-                print("🔊 THRESHOLD: \(sNRThreshold)\n")
-                appendVoiceData(data: audioChunkData)
-                
-                let text = acceptedRecordingsUserMessages.randomElement() ?? ""
-                let message = RecordingMessage(
-                    imageName: "checkmark.circle",
-                    text: text
-                )
-                self.message = message
-            } else {
-                print("\n🔊 ❌ SNR: \(formatted)")
-                print("🔊 THRESHOLD: \(sNRThreshold)\n")
-                
-                let text = rejectedRecordingsUserMessages.randomElement() ?? ""
-                let message = RecordingMessage(
-                    imageName: "exclamationmark.triangle",
-                    text: text,
-                    isError: true
-                )
-                self.message = message
+            // Check quality
+            do {
+                try checkQuality(data: audioChunkData, sampleRate: sampleRate)
+                acceptRecording()
+            } catch {
+                rejectRecording(withError: error)
             }
         }
     }
     
+    // Complete processing if the required length is achieved
+    fileprivate func checkQuality(data: Data, sampleRate: Int) throws {
+        guard isEnrollmentQualityCheckEnabled else { return }
+        
+        let thresholds = QualityCheckMetricsThresholds()
+        thresholds.minimumSnrDb = sNRThreshold
+        thresholds.minimumSpeechLengthMs = speechLengthForChunk
+        thresholds.maximumMultipleSpeakersDetectorScore = 0.05
+        thresholds.minimumSpeechRelativeLength = 0.65
+        
+        try qualitycheckEngine.checkQuality(data: data, sampleRate: sampleRate, thresholds: thresholds)
+    }
+    
+    // Append voice data and update lengths
     private func appendVoiceData(data: Data) {
         guard let speechInfo = speechInfo else { return }
         guard !voiceDataCollectionComplete else { return }
@@ -148,22 +150,44 @@ class AudioChunkProcessor {
         completeProcessingIfNeeded()
     }
     
+    // Accept the recording and provide feedback
+    fileprivate func acceptRecording() {
+        appendVoiceData(data: audioChunkData)
+        let text = acceptedRecordingsUserMessages.randomElement() ?? ""
+        let message = RecordingMessage(
+            imageName: "checkmark.circle",
+            text: text
+        )
+        self.message = message
+    }
+    
+    // Reject the recording with specific error information
+    fileprivate func rejectRecording(withError error: Error) {
+        var message = RecordingMessage()
+        if let qualityError = error as? QualityError {
+            message = RecordingMessage(imageName: qualityError.imageName,
+                                       text: qualityError.localizedDescription,
+                                       isError: true)
+        } else {
+            message = RecordingMessage(text: error.localizedDescription, isError: true)
+        }
+        
+        self.message = message
+    }
+    
+    // Complete processing if the required length is achieved
     private func completeProcessingIfNeeded() {
         if collectedSpeechLengthMs >= minSpeechLengthMs {
             voiceDataCollectionComplete = true
             let snr = SNRChecker.shared.getSNR(forData: mergedAudioData)
             
-            let audioMetrics = AudioMetrics(
-                audioDurationMs: recordingDurationMs,
-                speechDurationMs: collectedSpeechLengthMs,
-                snrDb: snr ?? 0
-            )
+            let audioMetrics = AudioMetrics(audioDurationMs: recordingDurationMs,
+                                            speechDurationMs: collectedSpeechLengthMs,
+                                            snrDb: snr ?? 0)
             
-            let audioRecording = AudioRecording(
-                data: mergedAudioData,
-                sampleRate: sampleRate,
-                audioMetrics: audioMetrics
-            )
+            let audioRecording = AudioRecording(data: mergedAudioData,
+                                                sampleRate: sampleRate,
+                                                audioMetrics: audioMetrics)
             
             DispatchQueue.main.async {
                 self.delegate?.onComplete(audioRecording: audioRecording)
