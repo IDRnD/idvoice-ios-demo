@@ -23,7 +23,7 @@ class AudioRecorder: AudioRecorderBase {
     
     private var minSpeechLengthMs: Float = 0
     private var maxSilenceLengthMs: Float = Globals.maxSilenceLengthMs
-    private var silenceDurationForReset: Float = 500
+    private var silenceDurationForReset: Float = 1000
     
     var trackSpeechLength = true
     var useSpeechSummaryToDetectSpeechEnd = true
@@ -147,7 +147,8 @@ class AudioRecorder: AudioRecorderBase {
             case (.textDependent, _ ), (.textIndependent, .verification) :
                 if let backgroundLengthMs = try self.speechSummaryStream?.getCurrentBackgroundLength() {
                     // Reset data if no speech is present to avoid silence and large file size
-                    if backgroundLengthMs.floatValue > self.silenceDurationForReset {
+                    if backgroundLengthMs.floatValue > self.silenceDurationForReset
+                    {
                         try resetData()
                     }
                     // Stop recording if minimum speech length is achieved (in "Continuous Verification" mode speech length is ignored).
@@ -188,7 +189,10 @@ class AudioRecorder: AudioRecorderBase {
     }
     
     private func detectedSpeechEnd() {
-        self.delegate?.onAnalyzing()
+        DispatchQueue.main.async {
+            self.delegate?.onAnalyzing()
+        }
+        
         if
             let lastSpeechInfo = lastSpeechInfo,
             let data = data,

@@ -229,7 +229,6 @@ class EnrollmentViewController: UIViewController {
         proceedWithSuccessfulEnrollmentAttempt()
         
         DispatchQueue.main.async {
-            //self.recordNumber += 1
             // When the desired amount of templates is achieved (in our case — 3) voice data for enrolling user is ready to be saved
             if self.recordNumber > self.enrollCount - 1 {
                 self.saveVoiceEnrollmentTemplate()
@@ -254,6 +253,10 @@ class EnrollmentViewController: UIViewController {
         
         // Get recommended quality thresholds for the given scenario.
         let thresholds = try qualitycheckEngine.getRecommendedThresholds(scenario: scenario)
+        
+        // Loosening a recommended minimum relative speech threshold to improve UX
+        thresholds.minimumSpeechRelativeLength = 0.55
+        
         try qualitycheckEngine.checkQuality(data: data, sampleRate: sampleRate, thresholds: thresholds)
     }
     

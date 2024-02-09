@@ -104,6 +104,7 @@ class RecordingViewController: UIViewController, UIAdaptivePresentationControlle
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         stopRecorder()
+        audioRecorder = nil
     }
     
     fileprivate func configureUI() {
@@ -136,11 +137,9 @@ class RecordingViewController: UIViewController, UIAdaptivePresentationControlle
     }
     
     fileprivate func configureAudioRecorder() {
-        audioRecorder = AudioRecorder(
-            recordingMode: recordingMode,
-            verificationMode: verificationMode,
-            minSpeechLength: minSpeechLengthMs
-        )
+        audioRecorder = AudioRecorder(recordingMode: recordingMode,
+                                      verificationMode: verificationMode,
+                                      minSpeechLength: minSpeechLengthMs)
         audioRecorder?.delegate = self
         audioRecorder?.audioChunkProcessor?.delegate = self
     }
@@ -273,6 +272,10 @@ extension RecordingViewController: AudioRecorderDelegate {
 }
 
 extension RecordingViewController: AudioChunkProcessorDelegate {
+    func onAnalyzingBitch() {
+        isAnalyzing = true
+    }
+    
     func onCurrentChunkSpeechLengthAvailiable(speechLength: Float) {
         currentSpeechLength = speechLength
     }

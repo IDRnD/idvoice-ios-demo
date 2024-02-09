@@ -20,6 +20,7 @@ protocol AudioChunkProcessorDelegate: AnyObject {
     func onCollectedSpeechLengthAvailable(speechLength: Float, audioLength: Float)
     func onComplete(audioRecording: AudioRecording?)
     func onMessage(_ message: RecordingMessage)
+    func onAnalyzing()
 }
 
 ///Class for analysing audio chunks during Text Independent Enrollment
@@ -127,7 +128,7 @@ class AudioChunkProcessor {
         thresholds.minimumSnrDb = sNRThreshold
         thresholds.minimumSpeechLengthMs = speechLengthForChunk
         thresholds.maximumMultipleSpeakersDetectorScore = 0.05
-        thresholds.minimumSpeechRelativeLength = 0.65
+        thresholds.minimumSpeechRelativeLength = 0.55
         
         try qualitycheckEngine.checkQuality(data: data, sampleRate: sampleRate, thresholds: thresholds)
     }
@@ -179,6 +180,11 @@ class AudioChunkProcessor {
     private func completeProcessingIfNeeded() {
         if collectedSpeechLengthMs >= minSpeechLengthMs {
             voiceDataCollectionComplete = true
+            
+            DispatchQueue.main.async {
+                self.delegate?.onAnalyzing()
+            }
+            
             let snr = SNRChecker.shared.getSNR(forData: mergedAudioData)
             
             let audioMetrics = AudioMetrics(audioDurationMs: recordingDurationMs,

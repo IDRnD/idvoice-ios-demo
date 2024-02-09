@@ -24,6 +24,7 @@ class VerificationViewController: UIViewController {
     private var verificationProbability: Float = 0
     private var livenessScore: Float = 0
     private var isSpoof: Bool = true
+    private var warnings: String?
     // Default minimum amout of speech for verification in milliseconds.
     // This parameter value is set depending on used mode (Text Dependent, Text Independent).
     private var minSpeechLengthMs = Globals.minSpeechLengthMs
@@ -103,9 +104,10 @@ class VerificationViewController: UIViewController {
             vc.delegate = self
             self.recordingController = vc
         } else if segue.identifier == "showResultsView" {
-            let view = segue.destination as! ResultViewController
-            view.verificationScore = verificationProbability
-            view.livenessScore = livenessScore
+            let vc = segue.destination as! ResultViewController
+            vc.verificationScore = verificationProbability
+            vc.livenessScore = livenessScore
+            vc.warnings = warnings
         }
     }
     
@@ -120,7 +122,6 @@ class VerificationViewController: UIViewController {
         
         // Voice verification
         do {
-            try checkQuality(data: data, sampleRate: sampleRate)
             // 1) Load user enrollment template
             guard let templateData = UserDefaults.standard.data(forKey: templateKey) else { return }
             let enrollTemplate = try VoiceTemplate(bytes: templateData)
@@ -133,9 +134,21 @@ class VerificationViewController: UIViewController {
                 self.verificationProbability = try self.voiceTemplateMatcher?.matchVoiceTemplates(
                     enrollTemplate, template2: verifyTemplate).probability ?? 0
             }
+            
+            try checkQuality(data: data, sampleRate: sampleRate)
         } catch {
-            proceedWithFailedVerificationAttempt(error: error)
-            return
+            // Treat multi-speaker detection as a warning on verification
+            if let error = error as? QualityError {
+                if error == .multipleSpeakers {
+                    warnings = Globals.QualityWarnings.multipleSpeakers
+                } else {
+                    proceedWithFailedVerificationAttempt(error: error)
+                    return
+                }
+            } else {
+                proceedWithFailedVerificationAttempt(error: error)
+                return
+            }
         }
         
         // Checking if Liveness Check is enabled
@@ -195,6 +208,10 @@ class VerificationViewController: UIViewController {
         let scenario: QualityCheckScenario = verificationMode == .textDependent ? .verificationTD : .verificationTI
         // Get recommended quality thresholds for the given scenario.
         let thresholds = try qualitycheckEngine.getRecommendedThresholds(scenario: scenario)
+        
+        // Loosening a recommended minimum relative speech threshold to improve UX
+        thresholds.minimumSpeechRelativeLength = 0.55
+        
         try qualitycheckEngine.checkQuality(data: data, sampleRate: sampleRate, thresholds: thresholds)
     }
     

@@ -44,8 +44,8 @@ struct Globals {
     static let minSpeechLengthMs: Float = 700
     static let minSpeechLengthMsTextDependentEnroll: Float = 700
     static let minSpeechLengthMsTextIndependentEnroll: Float = 12000
-    static let minSpeechLengthMsForTextIndependentVerify: Float = 500
-    static let minSpeechLengthMsForTextDependentVerify: Float = 500
+    static let minSpeechLengthMsForTextIndependentVerify: Float = 5000
+    static let minSpeechLengthMsForTextDependentVerify: Float = 700
     static let maxSilenceLengthMs: Float = 300
     static var minSpeechLengthMsForAudioChunk: Float = 3000
     
@@ -136,5 +136,9 @@ struct Globals {
         static let multipleSpeakers = "Multiple speakers detected. Please try again."
         static let notLive = "Voice is not live. Please record again."
         static let ok = ""
+    }
+    
+    struct QualityWarnings {
+        static let multipleSpeakers = "Multiple speakers detected."
     }
 }

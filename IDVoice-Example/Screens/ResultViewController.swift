@@ -13,9 +13,11 @@ class ResultViewController: UIViewController {
     @IBOutlet weak var livenessResultLabel: UILabel!
     @IBOutlet weak var livenessScoreLabel: UILabel!
     @IBOutlet weak var closeButton: UIButton!
+    @IBOutlet weak var warningsLabel: UILabel!
     
     var verificationScore: Float = 0
     var livenessScore: Float = 0
+    var warnings: String?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -59,7 +61,7 @@ class ResultViewController: UIViewController {
             }
         }
         
-        // 1) Set up verification result
+        // Set up verification result
         if verificationScore >= verificationThreshold {
             verificationResultLabel.text = "Verified"
             verificationResultLabel.textColor = .accentColor
@@ -70,6 +72,12 @@ class ResultViewController: UIViewController {
             verificationResultLabel.textColor = .redColor
             verificationScroreLabel.text = "\(Int(verificationScore * 100))%"
             verificationScroreLabel.textColor = .redColor
+        }
+        
+        // Display warnings if needed
+        if let warnings = warnings {
+            self.warningsLabel.isHidden = false
+            self.warningsLabel.text = "⚠️ \(warnings)"
         }
     }
     
