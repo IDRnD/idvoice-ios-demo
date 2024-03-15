@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -69,7 +69,7 @@
 		7DC384BA283791BE008C6D35 /* WAVFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WAVFormat.swift; sourceTree = "<group>"; };
 		7DC880EE2B0BE55100046A4C /* QualityError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QualityError.swift; sourceTree = "<group>"; };
 		7DDFB54D29DCA58100C95A93 /* liveness */ = {isa = PBXFileReference; lastKnownFileType = folder; name = liveness; path = VoiceSDK/liveness; sourceTree = "<group>"; };
-		8115E582270DBCBC001D0348 /* VoiceSdk.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = VoiceSdk.xcframework; path = VoiceSDK/VoiceSdk.xcframework; sourceTree = "<group>"; };
+		8115E582270DBCBC001D0348 /* VoiceSdk.xcframework */ = {isa = PBXFileReference; expectedSignature = "AppleDeveloperProgram:CQQF4ZK23A:ID R&D Inc."; lastKnownFileType = wrapper.xcframework; name = VoiceSdk.xcframework; path = VoiceSDK/VoiceSdk.xcframework; sourceTree = "<group>"; };
 		811BC11C24D31D1A007AD643 /* ResultViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultViewController.swift; sourceTree = "<group>"; };
 		811DAE8425D54FD4008541D3 /* AudioRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
 		81259A6625D55C3B0012F53C /* WAVFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WAVFormat.swift; sourceTree = "<group>"; };
@@ -468,7 +468,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.13.0;
+				MARKETING_VERSION = 4.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.idrnd.idvoice-example-app";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -496,7 +496,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.13.0;
+				MARKETING_VERSION = 4.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.idrnd.idvoice-example-app";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
